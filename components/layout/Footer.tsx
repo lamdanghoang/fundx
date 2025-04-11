@@ -7,9 +7,7 @@ const Footer = () => {
       <div className="container py-8 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="space-y-3">
-            <h3 className="text-lg font-bold gradient-text">
-              Fund The Future Now
-            </h3>
+            <h3 className="text-lg font-bold gradient-text">FundX</h3>
             <p className="text-sm text-muted-foreground">
               A decentralized crowdfunding platform powered by blockchain
               technology.
@@ -103,8 +101,7 @@ const Footer = () => {
 
         <div className="mt-8 pt-8 border-t flex flex-col md:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Fund The Future Now. All rights
-            reserved.
+            &copy; {new Date().getFullYear()} FundX. All rights reserved.
           </p>
           <div className="flex space-x-4 mt-4 md:mt-0">
             <a

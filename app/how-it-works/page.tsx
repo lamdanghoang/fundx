@@ -127,7 +127,7 @@ const HowItWorks = () => {
         <div className="container text-center">
           <h1 className="text-4xl font-bold mb-4">How It Works</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Fund The Future Now is revolutionizing crowdfunding with blockchain
+            FundX Now is revolutionizing crowdfunding with blockchain
             technology. Learn how our decentralized platform connects creators
             with backers worldwide.
           </p>
@@ -284,7 +284,7 @@ const HowItWorks = () => {
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
         <div className="container text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to Fund the Future?</h2>
+          <h2 className="text-3xl font-bold mb-4">Ready to FundX?</h2>
           <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             Join our community of creators and backers to bring innovative ideas
             to life through decentralized funding.

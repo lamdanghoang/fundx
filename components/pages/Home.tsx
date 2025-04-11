@@ -148,7 +148,7 @@ const Home = () => {
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="space-y-4">
               <h1 className="text-3xl md:text-5xl font-bold tracking-tight gradient-text">
-                Fund The Future With Blockchain Technology
+                FundX Blockchain Technology
               </h1>
               <p className="text-muted-foreground text-lg md:text-xl">
                 A decentralized crowdfunding platform that connects innovative
@@ -171,7 +171,7 @@ const Home = () => {
             <div className="relative">
               <div className="aspect-video overflow-hidden rounded-xl shadow-xl">
                 <img
-                  alt="Fund The Future Now platform"
+                  alt="FundX platform"
                   className="object-cover w-full h-full"
                   src="https://picsum.photos/seed/crowdfund1/800/450"
                 />
@@ -236,7 +236,7 @@ const Home = () => {
       <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
         <div className="container px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tight mb-4">
-            Ready to Fund the Future?
+            Ready to FundX?
           </h2>
           <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             Join our community of creators and backers to bring innovative ideas

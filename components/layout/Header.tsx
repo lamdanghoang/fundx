@@ -31,9 +31,7 @@ const Header = () => {
       <div className="container mx-auto flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold gradient-text">
-              Fund The Future Now
-            </span>
+            <span className="text-2xl font-bold gradient-text">FundX</span>
           </Link>
         </div>
 
