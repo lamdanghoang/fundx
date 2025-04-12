@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import React, { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -48,18 +48,6 @@ const categories = [
   "Sustainability",
 ];
 
-// Define types for the dynamic fields
-type StoryField = {
-  title: string;
-  content: string;
-};
-
-type RoadmapPhase = {
-  title: string;
-  timeline: string;
-  description: string;
-};
-
 const formSchema = z.object({
   title: z
     .string()
@@ -69,23 +57,9 @@ const formSchema = z.object({
   description: z
     .string()
     .min(50, { message: "Description must be at least 50 characters" }),
-  storyFields: z
-    .array(
-      z.object({
-        title: z.string().min(1, { message: "Section title is required" }),
-        content: z.string().min(1, { message: "Section content is required" }),
-      })
-    )
-    .optional(),
-  roadmapPhases: z
-    .array(
-      z.object({
-        title: z.string().min(1, { message: "Phase title is required" }),
-        timeline: z.string().min(1, { message: "Timeline is required" }),
-        description: z.string().min(1, { message: "Description is required" }),
-      })
-    )
-    .optional(),
+  story: z
+    .string()
+    .min(100, { message: "Project story must be at least 100 characters" }),
   targetAmount: z
     .number()
     .min(100, { message: "Target amount must be at least 100" }),
@@ -108,8 +82,7 @@ const CreateCampaign = () => {
       title: "",
       category: "",
       description: "",
-      storyFields: [{ title: "About the Project", content: "" }],
-      roadmapPhases: [{ title: "Phase 1", timeline: "", description: "" }],
+      story: "",
       targetAmount: 1000,
       duration: 30,
       rewardType: "none",
@@ -128,8 +101,11 @@ const CreateCampaign = () => {
         setFormProgress(50);
       }
     } else if (activeTab === "details") {
-      // Only trigger validation on the required fields
-      const isDetailsValid = await form.trigger(["targetAmount", "duration"]);
+      const isDetailsValid = await form.trigger([
+        "story",
+        "targetAmount",
+        "duration",
+      ]);
       if (isDetailsValid) {
         setActiveTab("rewards");
         setFormProgress(75);
@@ -157,6 +133,26 @@ const CreateCampaign = () => {
   };
 
   const storeBlob = async (values: z.infer<typeof formSchema>) => {
+    //     const markdown = `
+    // # ${values.title}
+
+    // **Category:** ${values.category}
+
+    // **Description:** ${values.description}
+
+    // ## Story
+
+    // ${values.story}
+
+    // **Target:** ${values.targetAmount}
+
+    // **Duration:** ${values.duration}
+
+    // **Reward:** ${values.rewardType}
+    // `;
+
+    // console.log("Markdown: ", markdown);
+    // const blobData = new Blob([values]);
     try {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
@@ -398,238 +394,27 @@ const CreateCampaign = () => {
 
                   <TabsContent value="details">
                     <div className="space-y-6">
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Campaign Story</FormLabel>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const currentFields =
-                                form.getValues().storyFields || [];
-                              form.setValue("storyFields", [
-                                ...currentFields,
-                                { title: "", content: "" },
-                              ]);
-                            }}
-                          >
-                            Add Section
-                          </Button>
-                        </div>
-                        <FormDescription>
-                          Tell your story by adding sections about your project,
-                          challenges, solutions, etc.
-                        </FormDescription>
-
-                        {(form.watch("storyFields") || []).length > 0 ? (
-                          <div className="space-y-4">
-                            {(form.watch("storyFields") || []).map(
-                              (field, index) => (
-                                <div
-                                  key={index}
-                                  className="border rounded-lg p-4 space-y-3"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <Input
-                                      placeholder="Section Title (e.g. About the Project)"
-                                      value={field.title}
-                                      onChange={(e) => {
-                                        const currentFields = [
-                                          ...(form.getValues().storyFields ||
-                                            []),
-                                        ];
-                                        if (currentFields[index]) {
-                                          currentFields[index].title =
-                                            e.target.value;
-                                          form.setValue(
-                                            "storyFields",
-                                            currentFields
-                                          );
-                                        }
-                                      }}
-                                      className="max-w-md"
-                                    />
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        const currentFields =
-                                          form.getValues().storyFields || [];
-                                        const newFields = currentFields.filter(
-                                          (_, i) => i !== index
-                                        );
-                                        form.setValue("storyFields", newFields);
-                                      }}
-                                    >
-                                      Remove
-                                    </Button>
-                                  </div>
-                                  <Textarea
-                                    placeholder="Write the content for this section"
-                                    value={field.content}
-                                    onChange={(e) => {
-                                      const currentFields = [
-                                        ...(form.getValues().storyFields || []),
-                                      ];
-                                      if (currentFields[index]) {
-                                        currentFields[index].content =
-                                          e.target.value;
-                                        form.setValue(
-                                          "storyFields",
-                                          currentFields
-                                        );
-                                      }
-                                    }}
-                                    rows={4}
-                                  />
-                                </div>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <div className="border border-dashed rounded-lg p-6 text-center">
-                            <p className="text-muted-foreground">
-                              Add sections to tell your story in an organized
-                              way
-                            </p>
-                          </div>
+                      <FormField
+                        control={form.control}
+                        name="story"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Campaign Story</FormLabel>
+                            <FormControl>
+                              <Textarea
+                                placeholder="Tell your story. What are you creating? Why is it important? How will you use the funds?"
+                                {...field}
+                                rows={6}
+                              />
+                            </FormControl>
+                            <FormDescription>
+                              Be detailed and transparent about your project and
+                              goals
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
                         )}
-                      </div>
-
-                      {/* Add Roadmap section */}
-                      <div className="space-y-4 mt-8">
-                        <div className="flex items-center justify-between">
-                          <FormLabel>Project Roadmap</FormLabel>
-                          <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              const currentPhases =
-                                form.getValues().roadmapPhases || [];
-                              form.setValue("roadmapPhases", [
-                                ...currentPhases,
-                                { title: "", timeline: "", description: "" },
-                              ]);
-                            }}
-                          >
-                            Add Phase
-                          </Button>
-                        </div>
-                        <FormDescription>
-                          Outline your project timeline and milestones
-                        </FormDescription>
-
-                        {(form.watch("roadmapPhases") || []).length > 0 ? (
-                          <div className="space-y-4">
-                            {(form.watch("roadmapPhases") || []).map(
-                              (phase, index) => (
-                                <div
-                                  key={index}
-                                  className="border rounded-lg p-4 space-y-3"
-                                >
-                                  <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
-                                      <div className="bg-brand-100 text-brand-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
-                                        {index + 1}
-                                      </div>
-                                      <Input
-                                        placeholder="Phase Title"
-                                        value={phase.title}
-                                        onChange={(e) => {
-                                          const currentPhases = [
-                                            ...(form.getValues()
-                                              .roadmapPhases || []),
-                                          ];
-                                          if (currentPhases[index]) {
-                                            currentPhases[index].title =
-                                              e.target.value;
-                                            form.setValue(
-                                              "roadmapPhases",
-                                              currentPhases
-                                            );
-                                          }
-                                        }}
-                                        className="max-w-xs"
-                                      />
-                                    </div>
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        const currentPhases =
-                                          form.getValues().roadmapPhases || [];
-                                        const newPhases = currentPhases.filter(
-                                          (_, i) => i !== index
-                                        );
-                                        form.setValue(
-                                          "roadmapPhases",
-                                          newPhases
-                                        );
-                                      }}
-                                    >
-                                      Remove
-                                    </Button>
-                                  </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="md:col-span-1">
-                                      <Input
-                                        placeholder="Timeline (e.g. Q1 2024)"
-                                        value={phase.timeline}
-                                        onChange={(e) => {
-                                          const currentPhases = [
-                                            ...(form.getValues()
-                                              .roadmapPhases || []),
-                                          ];
-                                          if (currentPhases[index]) {
-                                            currentPhases[index].timeline =
-                                              e.target.value;
-                                            form.setValue(
-                                              "roadmapPhases",
-                                              currentPhases
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="md:col-span-2">
-                                      <Textarea
-                                        placeholder="Describe what will be accomplished in this phase"
-                                        value={phase.description}
-                                        onChange={(e) => {
-                                          const currentPhases = [
-                                            ...(form.getValues()
-                                              .roadmapPhases || []),
-                                          ];
-                                          if (currentPhases[index]) {
-                                            currentPhases[index].description =
-                                              e.target.value;
-                                            form.setValue(
-                                              "roadmapPhases",
-                                              currentPhases
-                                            );
-                                          }
-                                        }}
-                                        rows={2}
-                                      />
-                                    </div>
-                                  </div>
-                                </div>
-                              )
-                            )}
-                          </div>
-                        ) : (
-                          <div className="border border-dashed rounded-lg p-6 text-center">
-                            <p className="text-muted-foreground">
-                              Add phases to your roadmap to show backers your
-                              project timeline
-                            </p>
-                          </div>
-                        )}
-                      </div>
+                      />
 
                       <div className="space-y-4">
                         <Label>Campaign Image</Label>
@@ -889,60 +674,6 @@ const CreateCampaign = () => {
                             </div>
                           </div>
                         </div>
-
-                        {/* Display Story Sections in Review */}
-                        {(form.watch("storyFields") || []).length > 0 && (
-                          <div className="border rounded-lg p-4">
-                            <h4 className="font-medium mb-2">Campaign Story</h4>
-                            <div className="space-y-3 text-sm">
-                              {(form.watch("storyFields") || []).map(
-                                (field, index) => (
-                                  <div key={index}>
-                                    <p className="text-muted-foreground">
-                                      {field.title}
-                                    </p>
-                                    <p className="font-medium">
-                                      {field.content || "Not provided"}
-                                    </p>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Display Roadmap in Review */}
-                        {(form.watch("roadmapPhases") || []).length > 0 && (
-                          <div className="border rounded-lg p-4">
-                            <h4 className="font-medium mb-2">
-                              Project Roadmap
-                            </h4>
-                            <div className="space-y-3 text-sm">
-                              {(form.watch("roadmapPhases") || []).map(
-                                (phase, index) => (
-                                  <div
-                                    key={index}
-                                    className="grid grid-cols-1 md:grid-cols-3 gap-2"
-                                  >
-                                    <div className="md:col-span-1">
-                                      <p className="text-muted-foreground">
-                                        Phase {index + 1}: {phase.title}
-                                      </p>
-                                      <p className="font-medium">
-                                        {phase.timeline || "No timeline"}
-                                      </p>
-                                    </div>
-                                    <div className="md:col-span-2">
-                                      <p className="font-medium">
-                                        {phase.description || "No description"}
-                                      </p>
-                                    </div>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          </div>
-                        )}
 
                         <div className="border rounded-lg p-4">
                           <h4 className="font-medium mb-2">Funding Details</h4>

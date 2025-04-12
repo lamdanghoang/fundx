@@ -4,11 +4,15 @@ import { Button } from "@/components/ui/button";
 import { Wallet, Search, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useWallet } from "@suiet/wallet-kit";
+import { ConnectButton } from "@mysten/dapp-kit";
+import "@mysten/dapp-kit/dist/index.css";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const pathname = usePathname();
+  const { connected } = useWallet();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -60,7 +64,9 @@ const Header = () => {
             </Button>
           </Link>
 
-          {isWalletConnected ? (
+          <ConnectButton className="gradient-bg" />
+
+          {/* {connected ? (
             <Button variant="outline" className="hidden md:inline-flex">
               <Wallet className="mr-2 h-4 w-4" />
               0x123...abc
@@ -73,7 +79,7 @@ const Header = () => {
               <Wallet className="mr-2 h-4 w-4" />
               Connect Wallet
             </Button>
-          )}
+          )} */}
 
           <Button
             variant="ghost"
