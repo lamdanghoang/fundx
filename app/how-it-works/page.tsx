@@ -1,5 +1,4 @@
 "use client";
-import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -12,6 +11,7 @@ import {
   Lock,
   ArrowRight,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 
 const HowItWorks = () => {
@@ -244,7 +244,7 @@ const HowItWorks = () => {
               </ul>
             </div>
             <div className="md:w-1/2">
-              <img
+              <Image
                 src="https://picsum.photos/seed/security1/800/600"
                 alt="Blockchain Security"
                 className="rounded-lg shadow-lg"
@@ -274,7 +274,7 @@ const HowItWorks = () => {
 
           <div className="mt-12 text-center">
             <p className="text-muted-foreground mb-4">
-              Still have questions? We're here to help!
+              Still have questions? We&apos;re here to help!
             </p>
             <Button variant="outline">Contact Support</Button>
           </div>

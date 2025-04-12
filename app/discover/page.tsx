@@ -1,6 +1,5 @@
 "use client";
 import { useState } from "react";
-import Layout from "@/components/layout/Layout";
 import CampaignList from "@/components/campaign/CampaignList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

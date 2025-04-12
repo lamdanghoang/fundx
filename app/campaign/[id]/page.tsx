@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { useParams } from "next/navigation";
+import Link from "next/link";
+import Image from "next/image";
 
 const CampaignDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,7 +30,8 @@ const CampaignDetail = () => {
         <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
         <h1 className="text-2xl font-bold mb-2">Campaign Not Found</h1>
         <p className="text-muted-foreground mb-6">
-          The campaign you're looking for doesn't exist or has been removed.
+          The campaign you&apos;re looking for doesn&apos;t exist or has been
+          removed.
         </p>
         <Button asChild>
           <a href="/discover">Browse Campaigns</a>
@@ -43,9 +46,9 @@ const CampaignDetail = () => {
     <div className="container py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1 text-sm text-muted-foreground mb-6">
-        <a href="/" className="hover:text-foreground">
+        <Link href="/" className="hover:text-foreground">
           Home
-        </a>
+        </Link>
         <ChevronRight className="h-4 w-4" />
         <a href="/discover" className="hover:text-foreground">
           Discover
@@ -58,7 +61,7 @@ const CampaignDetail = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           <div className="aspect-video w-full overflow-hidden rounded-lg shadow-md">
-            <img
+            <Image
               src={campaign.imageUrl}
               alt={campaign.title}
               className="w-full h-full object-cover"
@@ -219,9 +222,9 @@ const CampaignDetail = () => {
                       </span>
                     </div>
                     <p className="text-muted-foreground mb-4">
-                      We're excited to announce that we've completed the first
-                      major development milestone. Here's what we've
-                      accomplished and what's coming next...
+                      We&apos;re excited to announce that we&apos;ve completed
+                      the first major development milestone. Here&apos;s what
+                      we&apos;ve accomplished and what&apos;s coming next...
                     </p>
                     <Button variant="outline" size="sm">
                       Read More
@@ -240,9 +243,9 @@ const CampaignDetail = () => {
                       </span>
                     </div>
                     <p className="text-muted-foreground mb-4">
-                      We've reached the halfway point of our funding goal! This
-                      is an incredible milestone and we couldn't have done it
-                      without our amazing community of backers...
+                      We&apos;ve reached the halfway point of our funding goal!
+                      This is an incredible milestone and we couldn&apos;t have
+                      done it without our amazing community of backers...
                     </p>
                     <Button variant="outline" size="sm">
                       Read More
@@ -262,9 +265,9 @@ const CampaignDetail = () => {
                     </div>
                     <p className="text-muted-foreground mb-4">
                       Today marks the official launch of our campaign! After
-                      months of preparation, we're thrilled to finally share our
-                      vision with the world and invite you to be part of this
-                      journey...
+                      months of preparation, we&apos;re thrilled to finally
+                      share our vision with the world and invite you to be part
+                      of this journey...
                     </p>
                     <Button variant="outline" size="sm">
                       Read More

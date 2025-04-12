@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import Link from "next/link";
 
 const categories = [
   "Technology",
@@ -132,58 +133,58 @@ const CreateCampaign = () => {
     }
   };
 
-  const storeBlob = async (values: z.infer<typeof formSchema>) => {
-    //     const markdown = `
-    // # ${values.title}
+  // const storeBlob = async (values: z.infer<typeof formSchema>) => {
+  //   //     const markdown = `
+  //   // # ${values.title}
 
-    // **Category:** ${values.category}
+  //   // **Category:** ${values.category}
 
-    // **Description:** ${values.description}
+  //   // **Description:** ${values.description}
 
-    // ## Story
+  //   // ## Story
 
-    // ${values.story}
+  //   // ${values.story}
 
-    // **Target:** ${values.targetAmount}
+  //   // **Target:** ${values.targetAmount}
 
-    // **Duration:** ${values.duration}
+  //   // **Duration:** ${values.duration}
 
-    // **Reward:** ${values.rewardType}
-    // `;
+  //   // **Reward:** ${values.rewardType}
+  //   // `;
 
-    // console.log("Markdown: ", markdown);
-    // const blobData = new Blob([values]);
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
-        {
-          method: "PUT",
-          body: JSON.stringify(values),
-          headers: {
-            "Content-Type": "application/octet-stream",
-          },
-          mode: "cors",
-        }
-      );
+  //   // console.log("Markdown: ", markdown);
+  //   // const blobData = new Blob([values]);
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
+  //       {
+  //         method: "PUT",
+  //         body: JSON.stringify(values),
+  //         headers: {
+  //           "Content-Type": "application/octet-stream",
+  //         },
+  //         mode: "cors",
+  //       }
+  //     );
 
-      const result = await response.json();
-      console.log("Blob stored:", result);
-    } catch (error) {
-      console.error("Error storing blob:", error);
-    }
-  };
+  //     const result = await response.json();
+  //     console.log("Blob stored:", result);
+  //   } catch (error) {
+  //     console.error("Error storing blob:", error);
+  //   }
+  // };
 
-  const readBlob = async (blobId: string) => {
-    try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${blobId}`
-      );
-      const blob = await response.json();
-      console.log("Blob content:", blob);
-    } catch (error) {
-      console.error("Error reading blob:", error);
-    }
-  };
+  // const readBlob = async (blobId: string) => {
+  //   try {
+  //     const response = await fetch(
+  //       `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${blobId}`
+  //     );
+  //     const blob = await response.json();
+  //     console.log("Blob content:", blob);
+  //   } catch (error) {
+  //     console.error("Error reading blob:", error);
+  //   }
+  // };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     // This would be replaced with actual blockchain interaction
@@ -194,8 +195,8 @@ const CreateCampaign = () => {
 
     // Simulate API delay
     setTimeout(() => {
-      //   setIsSubmitting(false);
-      //   setIsSuccess(true);
+      setIsSubmitting(false);
+      setIsSuccess(true);
     }, 2000);
   };
 
@@ -215,10 +216,10 @@ const CreateCampaign = () => {
           </p>
           <div className="space-y-4">
             <Button asChild size="lg" className="gradient-bg w-full">
-              <a href="/campaign/new-campaign">View Your Campaign</a>
+              <Link href="/campaign/new-campaign">View Your Campaign</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full">
-              <a href="/">Return to Home</a>
+              <Link href="/">Return to Home</Link>
             </Button>
           </div>
         </div>
@@ -229,13 +230,13 @@ const CreateCampaign = () => {
   return (
     <div className="container py-8">
       <div className="mb-6">
-        <a
+        <Link
           href="/"
           className="inline-flex items-center text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Home
-        </a>
+        </Link>
       </div>
 
       <div className="max-w-3xl mx-auto">
@@ -593,7 +594,7 @@ const CreateCampaign = () => {
                             <p className="font-medium">Reward Setup</p>
                           </div>
                           <p className="text-sm text-muted-foreground mb-4">
-                            After creating your campaign, you'll be guided
+                            After creating your campaign, you&apos;ll be guided
                             through the process of setting up your
                             {form.watch("rewardType") === "token"
                               ? " token"
@@ -708,8 +709,8 @@ const CreateCampaign = () => {
                             Connect Wallet to Continue
                           </h4>
                           <p className="text-sm text-muted-foreground mb-4">
-                            To create your campaign on the blockchain, you'll
-                            need to connect your wallet and sign the
+                            To create your campaign on the blockchain,
+                            you&apos;ll need to connect your wallet and sign the
                             transaction.
                           </p>
                           <Button type="button" className="gradient-bg">

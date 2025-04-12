@@ -8,6 +8,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Clock, Users } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 export interface CampaignProps {
   id: string;
@@ -42,7 +43,7 @@ const CampaignCard = ({
   return (
     <Card className="overflow-hidden transition-all hover:shadow-md">
       <div className="aspect-video relative overflow-hidden">
-        <img
+        <Image
           src={imageUrl}
           alt={title}
           className="object-cover w-full h-full transition-transform hover:scale-105 duration-500"

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import CampaignHighlights from "@/components/campaign/CampaignHighlights";
 import { Rocket, Gem, Shield, Globe } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 // Mock data for campaigns
 const mockCampaigns = [
@@ -170,7 +171,7 @@ const Home = () => {
             </div>
             <div className="relative">
               <div className="aspect-video overflow-hidden rounded-xl shadow-xl">
-                <img
+                <Image
                   alt="FundX platform"
                   className="object-cover w-full h-full"
                   src="https://picsum.photos/seed/crowdfund1/800/450"
