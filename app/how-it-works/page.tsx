@@ -247,6 +247,7 @@ const HowItWorks = () => {
               <Image
                 src="https://picsum.photos/seed/security1/800/600"
                 alt="Blockchain Security"
+                fill
                 className="rounded-lg shadow-lg"
               />
             </div>

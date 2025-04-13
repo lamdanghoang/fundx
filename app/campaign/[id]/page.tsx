@@ -64,6 +64,7 @@ const CampaignDetail = () => {
             <Image
               src={campaign.imageUrl}
               alt={campaign.title}
+              fill
               className="w-full h-full object-cover"
             />
           </div>

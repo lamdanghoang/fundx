@@ -4,10 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Wallet, Search, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ConnectButton } from "@mysten/dapp-kit";
-import "@mysten/dapp-kit/dist/index.css";
+import { CustomBtn } from "../wallet/ConnectButton";
+import { useDisconnectWallet, useCurrentAccount } from "@mysten/dapp-kit";
 
 const Header = () => {
+  const currentAccount = useCurrentAccount();
+  const { mutate: disconnect } = useDisconnectWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isWalletConnected, setIsWalletConnected] = useState(false);
   const pathname = usePathname();
@@ -62,7 +64,19 @@ const Header = () => {
             </Button>
           </Link>
 
-          <ConnectButton className="gradient-bg" />
+          {/* <ConnectButton className="gradient-bg" /> */}
+          {!currentAccount ? (
+            <CustomBtn />
+          ) : (
+            <Button
+              variant="outline"
+              className="w-40 hidden md:inline-flex"
+              onClick={() => disconnect()}
+            >
+              <Wallet className="mr-2 h-4 w-4" />
+              0x123...abc
+            </Button>
+          )}
 
           {/* {connected ? (
             <Button variant="outline" className="hidden md:inline-flex">

@@ -174,6 +174,7 @@ const Home = () => {
                 <Image
                   alt="FundX platform"
                   className="object-cover w-full h-full"
+                  fill
                   src="https://picsum.photos/seed/crowdfund1/800/450"
                 />
               </div>

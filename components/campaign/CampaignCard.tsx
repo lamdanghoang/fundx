@@ -46,6 +46,7 @@ const CampaignCard = ({
         <Image
           src={imageUrl}
           alt={title}
+          fill
           className="object-cover w-full h-full transition-transform hover:scale-105 duration-500"
         />
         <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">
