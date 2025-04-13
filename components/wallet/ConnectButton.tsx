@@ -1,4 +1,4 @@
-import { ConnectModal, useCurrentAccount } from "@mysten/dapp-kit";
+import { ConnectModal } from "@mysten/dapp-kit";
 import { useState } from "react";
 import { Button } from "../ui/button";
 import { Wallet } from "lucide-react";
