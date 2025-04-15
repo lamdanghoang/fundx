@@ -1,27 +1,17 @@
 "use client";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Wallet, Search, Menu, X } from "lucide-react";
+import { Search, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CustomBtn } from "../wallet/ConnectButton";
-import { useDisconnectWallet, useCurrentAccount } from "@mysten/dapp-kit";
 
 const Header = () => {
-  const currentAccount = useCurrentAccount();
-  const { mutate: disconnect } = useDisconnectWallet();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isWalletConnected, setIsWalletConnected] = useState(false);
   const pathname = usePathname();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
-  };
-
-  const connectWallet = () => {
-    // This would be replaced with actual wallet connection logic
-    setIsWalletConnected(true);
-    console.log("Connecting wallet...");
   };
 
   const navigation = [
@@ -31,7 +21,7 @@ const Header = () => {
   ];
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="px-4 sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto flex h-16 items-center justify-between">
         <div className="flex items-center gap-2">
           <Link href="/" className="flex items-center space-x-2">
@@ -64,34 +54,10 @@ const Header = () => {
             </Button>
           </Link>
 
-          {/* <ConnectButton className="gradient-bg" /> */}
-          {!currentAccount ? (
+          {/* Connect button */}
+          <div className="hidden md:block">
             <CustomBtn />
-          ) : (
-            <Button
-              variant="outline"
-              className="w-40 hidden md:inline-flex"
-              onClick={() => disconnect()}
-            >
-              <Wallet className="mr-2 h-4 w-4" />
-              0x123...abc
-            </Button>
-          )}
-
-          {/* {connected ? (
-            <Button variant="outline" className="hidden md:inline-flex">
-              <Wallet className="mr-2 h-4 w-4" />
-              0x123...abc
-            </Button>
-          ) : (
-            <Button
-              onClick={connectWallet}
-              className="hidden md:inline-flex gradient-bg"
-            >
-              <Wallet className="mr-2 h-4 w-4" />
-              Connect Wallet
-            </Button>
-          )} */}
+          </div>
 
           <Button
             variant="ghost"
@@ -134,18 +100,9 @@ const Header = () => {
               <Search className="mr-2 h-5 w-5" />
               Search
             </Link>
-            {!isWalletConnected && (
-              <Button
-                onClick={() => {
-                  connectWallet();
-                  setIsMenuOpen(false);
-                }}
-                className="w-full mt-2 gradient-bg"
-              >
-                <Wallet className="mr-2 h-4 w-4" />
-                Connect Wallet
-              </Button>
-            )}
+            <div className="md:hidden">
+              <CustomBtn />
+            </div>
           </div>
         </div>
       )}

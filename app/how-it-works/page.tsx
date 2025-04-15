@@ -124,7 +124,7 @@ const HowItWorks = () => {
     <>
       {/* Hero Section */}
       <section className="py-16 bg-gradient-to-r from-brand-100/50 to-fund-100/50">
-        <div className="container text-center">
+        <div className="container text-center px-4 md:px-0">
           <h1 className="text-4xl font-bold mb-4">How It Works</h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             FundX Now is revolutionizing crowdfunding with blockchain
@@ -135,7 +135,7 @@ const HowItWorks = () => {
       </section>
 
       {/* Steps Section */}
-      <section className="py-16">
+      <section className="py-16 px-4 md:px-0">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">The Process</h2>
 
@@ -169,7 +169,7 @@ const HowItWorks = () => {
       </section>
 
       {/* Benefits Section */}
-      <section className="py-16 bg-muted">
+      <section className="py-16 px-4 md:px-0 bg-muted">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-4">
             Benefits of Blockchain Crowdfunding
@@ -194,11 +194,11 @@ const HowItWorks = () => {
       </section>
 
       {/* Security Section */}
-      <section className="py-16">
+      <section className="py-16 px-4 md:px-0">
         <div className="container">
           <div className="flex flex-col md:flex-row items-center gap-8">
             <div className="md:w-1/2">
-              <Lock className="h-16 w-16 text-brand-600 mb-4" />
+              <Lock className="h-8 w-8 md:h-16 md:w-16 text-brand-600 mb-4" />
               <h2 className="text-3xl font-bold mb-4">
                 Security & Transparency
               </h2>
@@ -247,7 +247,8 @@ const HowItWorks = () => {
               <Image
                 src="https://picsum.photos/seed/security1/800/600"
                 alt="Blockchain Security"
-                fill
+                width={500}
+                height={500}
                 className="rounded-lg shadow-lg"
               />
             </div>
@@ -256,7 +257,7 @@ const HowItWorks = () => {
       </section>
 
       {/* FAQ Section */}
-      <section className="py-16 bg-muted">
+      <section className="py-16 px-4 md:px-0 bg-muted">
         <div className="container">
           <h2 className="text-3xl font-bold text-center mb-12">
             Frequently Asked Questions
@@ -277,14 +278,16 @@ const HowItWorks = () => {
             <p className="text-muted-foreground mb-4">
               Still have questions? We&apos;re here to help!
             </p>
-            <Button variant="outline">Contact Support</Button>
+            <Button variant="outline" className="hover:bg-accent">
+              Contact Support
+            </Button>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
-        <div className="container text-center">
+      <section className="mb-8 md:mb-0 py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
+        <div className="px-4 md:px-0 container text-center">
           <h2 className="text-3xl font-bold mb-4">Ready to FundX?</h2>
           <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             Join our community of creators and backers to bring innovative ideas

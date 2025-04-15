@@ -43,7 +43,7 @@ const CampaignDetail = () => {
   const progress = (campaign.raisedAmount / campaign.targetAmount) * 100;
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 px-4 md:px-0">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1 text-sm text-muted-foreground mb-6">
         <Link href="/" className="hover:text-foreground">
@@ -64,12 +64,13 @@ const CampaignDetail = () => {
             <Image
               src={campaign.imageUrl}
               alt={campaign.title}
-              fill
               className="w-full h-full object-cover"
+              width={500}
+              height={500}
             />
           </div>
 
-          <div>
+          <div className="md:hidden">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold">{campaign.title}</h1>
               <div className="flex space-x-2">
@@ -213,7 +214,7 @@ const CampaignDetail = () => {
             <TabsContent value="updates" className="pt-4">
               <div className="space-y-6">
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardContent>
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold">
                         Development Milestone Reached!
@@ -234,7 +235,7 @@ const CampaignDetail = () => {
                 </Card>
 
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardContent>
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold">
                         Thank you for helping us reach 50%!
@@ -255,7 +256,7 @@ const CampaignDetail = () => {
                 </Card>
 
                 <Card>
-                  <CardContent className="pt-6">
+                  <CardContent>
                     <div className="flex justify-between items-start mb-2">
                       <h3 className="font-bold">
                         Campaign Launch Announcement
@@ -283,7 +284,7 @@ const CampaignDetail = () => {
                 {[...Array(5)].map((_, i) => (
                   <div
                     key={i}
-                    className="flex items-center p-4 border rounded-lg"
+                    className="w-full flex items-center p-4 border rounded-lg"
                   >
                     <Avatar className="h-10 w-10 mr-4">
                       <AvatarImage
@@ -303,7 +304,7 @@ const CampaignDetail = () => {
                   </div>
                 ))}
 
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-fit">
                   Load More Backers
                 </Button>
               </div>
@@ -314,8 +315,28 @@ const CampaignDetail = () => {
         {/* Sidebar */}
         <div className="space-y-6">
           <Card>
-            <CardContent className="pt-6">
+            <CardContent>
               <div className="space-y-4">
+                <div className="space-y-2 hidden md:block">
+                  <div className="w-fit text-xs px-2 py-1 bg-brand-100 text-brand-800 rounded-full">
+                    {campaign.category}
+                  </div>
+                  <h1 className="text-3xl font-bold">{campaign.title}</h1>
+                  <div className="flex items-center mt-2 space-x-4">
+                    <div className="flex items-center">
+                      <Avatar className="h-6 w-6 mr-2">
+                        <AvatarImage
+                          src={`https://picsum.photos/seed/${campaign.creator.name}/100`}
+                        />
+                        <AvatarFallback>
+                          {campaign.creator.name.substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <span className="text-sm">{campaign.creator.name}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-xl font-bold">
@@ -341,6 +362,23 @@ const CampaignDetail = () => {
                 <Button className="w-full gradient-bg">
                   Back This Project
                 </Button>
+
+                <div className="hidden md:flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 bg-card"
+                  >
+                    <Heart className="h-5 w-5" /> Like
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 bg-card"
+                  >
+                    <Share2 className="h-5 w-5" /> Share
+                  </Button>
+                </div>
 
                 <div className="pt-4 border-t">
                   <h3 className="font-bold mb-3">Pledge Tiers</h3>
@@ -393,7 +431,7 @@ const CampaignDetail = () => {
           </Card>
 
           <Card>
-            <CardContent className="pt-6">
+            <CardContent>
               <h3 className="font-bold mb-3">Project Details</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
@@ -427,23 +465,6 @@ const CampaignDetail = () => {
                   <span className="text-muted-foreground">Launch Date</span>
                   <span className="font-medium">April 1, 2025</span>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="pt-6">
-              <h3 className="font-bold mb-3">Share This Project</h3>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" className="flex-1">
-                  Twitter
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Facebook
-                </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Copy Link
-                </Button>
               </div>
             </CardContent>
           </Card>

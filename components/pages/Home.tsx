@@ -133,7 +133,6 @@ const features = [
 ];
 
 const Home = () => {
-  // For demo purposes, we're using the same data for all tabs
   const trendingCampaigns = [...mockCampaigns];
   const newCampaigns = [...mockCampaigns].sort(() => Math.random() - 0.5);
   const endingSoonCampaigns = [...mockCampaigns].sort(
@@ -148,7 +147,7 @@ const Home = () => {
         <div className="container px-4 md:px-6">
           <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 items-center">
             <div className="space-y-4">
-              <h1 className="text-3xl md:text-5xl font-bold tracking-tight gradient-text">
+              <h1 className="text-3xl md:text-5xl font-bold tracking-tight gradient-text md:h-25">
                 FundX Blockchain Technology
               </h1>
               <p className="text-muted-foreground text-lg md:text-xl">
@@ -163,7 +162,11 @@ const Home = () => {
                   </Button>
                 </Link>
                 <Link href="/create">
-                  <Button size="lg" variant="outline">
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    className="hover:bg-accent"
+                  >
                     Start Your Campaign
                   </Button>
                 </Link>
@@ -174,7 +177,8 @@ const Home = () => {
                 <Image
                   alt="FundX platform"
                   className="object-cover w-full h-full"
-                  fill
+                  width={500}
+                  height={500}
                   src="https://picsum.photos/seed/crowdfund1/800/450"
                 />
               </div>
@@ -226,7 +230,7 @@ const Home = () => {
           />
           <div className="mt-8 text-center">
             <Link href="/discover">
-              <Button variant="outline" size="lg">
+              <Button variant="outline" size="lg" className="hover:bg-accent">
                 View All Campaigns
               </Button>
             </Link>
@@ -235,7 +239,7 @@ const Home = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
+      <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white md:rounded-2xl">
         <div className="container px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tight mb-4">
             Ready to FundX?

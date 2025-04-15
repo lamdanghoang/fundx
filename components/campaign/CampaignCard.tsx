@@ -41,12 +41,13 @@ const CampaignCard = ({
   const progress = (raisedAmount / targetAmount) * 100;
 
   return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
+    <Card className="pt-0 overflow-hidden transition-all hover:shadow-md">
       <div className="aspect-video relative overflow-hidden">
         <Image
           src={imageUrl}
           alt={title}
-          fill
+          width={500}
+          height={500}
           className="object-cover w-full h-full transition-transform hover:scale-105 duration-500"
         />
         <div className="absolute top-2 right-2 bg-black/70 text-white text-xs px-2 py-1 rounded-full">

@@ -52,7 +52,7 @@ const Discover = () => {
   };
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 px-4 md:px-0">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Discover Campaigns</h1>
         <Button
