@@ -177,6 +177,3 @@ def create_contribute():
 #         return jsonify(response.data[1][0]), 201
 #     except Exception as e:
 #         return jsonify({"error": str(e)}), 500
-
-if __name__ == '__main__':
-    app.run(debug=True)
