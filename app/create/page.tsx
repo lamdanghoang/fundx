@@ -22,11 +22,7 @@ import {
   ArrowLeft,
   ArrowRight,
   CheckCircle,
-  ImageIcon,
-  Upload,
-  UserCircle,
   Wallet,
-  X,
 } from "lucide-react";
 import {
   Form,
@@ -833,9 +829,9 @@ const CreateCampaign = () => {
                           maxFiles={10}
                           accept="image/*"
                         />
-                        {form.watch("galleryImages")?.length > 0 && (
+                        {(form.watch("galleryImages") || []).length > 0 && (
                           <div className="text-sm text-muted-foreground">
-                            {form.watch("galleryImages")?.length} images
+                            {(form.watch("galleryImages") || []).length} images
                             uploaded
                           </div>
                         )}
