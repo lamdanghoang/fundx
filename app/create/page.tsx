@@ -16,13 +16,17 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+
 import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
   CheckCircle,
+  ImageIcon,
   Upload,
+  UserCircle,
   Wallet,
+  X,
 } from "lucide-react";
 import {
   Form,
@@ -36,6 +40,8 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
+import { storeBlob, createCampaign } from "@/lib/api";
+import MultiFileUploader from "@/components/pages/create/Uploader";
 
 const categories = [
   "Technology",
@@ -48,18 +54,6 @@ const categories = [
   "Education",
   "Sustainability",
 ];
-
-// Define types for the dynamic fields
-// type StoryField = {
-//   title: string;
-//   content: string;
-// };
-
-// type RoadmapPhase = {
-//   title: string;
-//   timeline: string;
-//   description: string;
-// };
 
 const formSchema = z.object({
   title: z
@@ -87,6 +81,20 @@ const formSchema = z.object({
       })
     )
     .optional(),
+  teams: z
+    .array(
+      z.object({
+        name: z.string().min(1, { message: "Name is required" }),
+        role: z.string().min(1, { message: "Role is required" }),
+        contact: z.object({
+          email: z.string().optional(),
+          twitter: z.string().optional(),
+          telegram: z.string().optional(),
+        }),
+      })
+    )
+    .optional(),
+  galleryImages: z.array(z.string()).optional(),
   targetAmount: z
     .number()
     .min(100, { message: "Target amount must be at least 100" }),
@@ -109,8 +117,16 @@ const CreateCampaign = () => {
       title: "",
       category: "",
       description: "",
-      storyFields: [{ title: "About the Project", content: "" }],
-      roadmapPhases: [{ title: "Phase 1", timeline: "", description: "" }],
+      storyFields: [{ title: "", content: "" }],
+      roadmapPhases: [{ title: "", timeline: "", description: "" }],
+      teams: [
+        {
+          name: "",
+          role: "",
+          contact: { email: "", twitter: "", telegram: "" },
+        },
+      ],
+      galleryImages: [],
       targetAmount: 1000,
       duration: 30,
       rewardType: "none",
@@ -157,51 +173,29 @@ const CreateCampaign = () => {
     }
   };
 
-  // const storeBlob = async (values: z.infer<typeof formSchema>) => {
-  //   try {
-  //     const response = await fetch(
-  //       `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
-  //       {
-  //         method: "PUT",
-  //         body: JSON.stringify(values),
-  //         headers: {
-  //           "Content-Type": "application/octet-stream",
-  //         },
-  //         mode: "cors",
-  //       }
-  //     );
-
-  //     const result = await response.json();
-  //     console.log("Blob stored:", result);
-  //   } catch (error) {
-  //     console.error("Error storing blob:", error);
-  //   }
-  // };
-
-  // const readBlob = async (blobId: string) => {
-  //   try {
-  //     const response = await fetch(
-  //       `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${blobId}`
-  //     );
-  //     const blob = await response.json();
-  //     console.log("Blob content:", blob);
-  //   } catch (error) {
-  //     console.error("Error reading blob:", error);
-  //   }
-  // };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // This would be replaced with actual blockchain interaction
-    console.log(values);
-    // setIsSubmitting(true);
-    // await storeBlob(values);
-    // await readBlob("Sfla0jiQp6lBF7Yo23JjX_Idj6bmEIs0LyN9LxGeNOs");
+    try {
+      setIsSubmitting(true);
+      setIsSuccess(false);
 
-    // Simulate API delay
-    setTimeout(() => {
-      setIsSubmitting(false);
+      // Store campaign data in blob
+      const blobResult = await storeBlob(values);
+
+      // Create campaign in database
+      const campaignResult = await createCampaign({
+        ...values,
+        blobId: blobResult.id,
+      });
+
+      console.log(campaignResult);
+
       setIsSuccess(true);
-    }, 2000);
+    } catch (error) {
+      console.error("Error creating campaign:", error);
+      // Handle error appropriately
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSuccess) {
@@ -232,7 +226,7 @@ const CreateCampaign = () => {
   }
 
   return (
-    <div className="container py-8">
+    <div className="container py-8 px-4 md:px-6">
       <div className="mb-6">
         <Link
           href="/"
@@ -296,7 +290,7 @@ const CreateCampaign = () => {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <Card>
-              <CardContent className="pt-6">
+              <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
                   <TabsList className="hidden">
                     <TabsTrigger value="basics">Basics</TabsTrigger>
@@ -311,7 +305,7 @@ const CreateCampaign = () => {
                         control={form.control}
                         name="title"
                         render={({ field }) => (
-                          <FormItem>
+                          <FormItem className="text-lg">
                             <FormLabel>Campaign Title</FormLabel>
                             <FormControl>
                               <Input
@@ -500,7 +494,7 @@ const CreateCampaign = () => {
                       </div>
 
                       {/* Add Roadmap section */}
-                      <div className="space-y-4 mt-8">
+                      <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <FormLabel>Project Roadmap</FormLabel>
                           <Button
@@ -532,29 +526,51 @@ const CreateCampaign = () => {
                                   className="border rounded-lg p-4 space-y-3"
                                 >
                                   <div className="flex items-center justify-between">
-                                    <div className="flex items-center space-x-2">
+                                    <div className="w-full flex items-center space-x-2">
                                       <div className="bg-brand-100 text-brand-800 rounded-full w-6 h-6 flex items-center justify-center text-sm font-medium">
                                         {index + 1}
                                       </div>
-                                      <Input
-                                        placeholder="Phase Title"
-                                        value={phase.title}
-                                        onChange={(e) => {
-                                          const currentPhases = [
-                                            ...(form.getValues()
-                                              .roadmapPhases || []),
-                                          ];
-                                          if (currentPhases[index]) {
-                                            currentPhases[index].title =
-                                              e.target.value;
-                                            form.setValue(
-                                              "roadmapPhases",
-                                              currentPhases
-                                            );
-                                          }
-                                        }}
-                                        className="max-w-xs"
-                                      />
+                                      <div className="max-w-40">
+                                        <Input
+                                          placeholder="Phase Title"
+                                          value={phase.title}
+                                          onChange={(e) => {
+                                            const currentPhases = [
+                                              ...(form.getValues()
+                                                .roadmapPhases || []),
+                                            ];
+                                            if (currentPhases[index]) {
+                                              currentPhases[index].title =
+                                                e.target.value;
+                                              form.setValue(
+                                                "roadmapPhases",
+                                                currentPhases
+                                              );
+                                            }
+                                          }}
+                                          className="max-w-xs"
+                                        />
+                                      </div>
+                                      <div className="max-w-40">
+                                        <Input
+                                          placeholder="Timeline (e.g. Q1 2024)"
+                                          value={phase.timeline}
+                                          onChange={(e) => {
+                                            const currentPhases = [
+                                              ...(form.getValues()
+                                                .roadmapPhases || []),
+                                            ];
+                                            if (currentPhases[index]) {
+                                              currentPhases[index].timeline =
+                                                e.target.value;
+                                              form.setValue(
+                                                "roadmapPhases",
+                                                currentPhases
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
                                     </div>
                                     <Button
                                       type="button"
@@ -575,28 +591,8 @@ const CreateCampaign = () => {
                                       Remove
                                     </Button>
                                   </div>
-                                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                                    <div className="md:col-span-1">
-                                      <Input
-                                        placeholder="Timeline (e.g. Q1 2024)"
-                                        value={phase.timeline}
-                                        onChange={(e) => {
-                                          const currentPhases = [
-                                            ...(form.getValues()
-                                              .roadmapPhases || []),
-                                          ];
-                                          if (currentPhases[index]) {
-                                            currentPhases[index].timeline =
-                                              e.target.value;
-                                            form.setValue(
-                                              "roadmapPhases",
-                                              currentPhases
-                                            );
-                                          }
-                                        }}
-                                      />
-                                    </div>
-                                    <div className="md:col-span-2">
+                                  <div className="grid grid-cols-1 gap-3">
+                                    <div className="">
                                       <Textarea
                                         placeholder="Describe what will be accomplished in this phase"
                                         value={phase.description}
@@ -632,25 +628,217 @@ const CreateCampaign = () => {
                         )}
                       </div>
 
+                      {/* Team Members section */}
                       <div className="space-y-4">
-                        <Label>Campaign Image</Label>
-                        <div className="border-2 border-dashed rounded-lg p-6 text-center">
-                          <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-                          <p className="text-sm text-muted-foreground mb-2">
-                            Drag and drop an image, or click to browse
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            Recommended size: 1200x630px, max 5MB (JPG, PNG)
-                          </p>
+                        <div className="flex items-center justify-between">
+                          <FormLabel>Team Members</FormLabel>
                           <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            className="mt-4"
+                            onClick={() => {
+                              const currentTeam = form.getValues().teams || [];
+                              form.setValue("teams", [
+                                ...currentTeam,
+                                {
+                                  name: "",
+                                  role: "",
+                                  contact: {
+                                    email: "",
+                                    twitter: "",
+                                    telegram: "",
+                                  },
+                                },
+                              ]);
+                            }}
                           >
-                            Upload Image
+                            Add Team Member
                           </Button>
                         </div>
+                        <FormDescription>
+                          Add key team members who are working on this project
+                        </FormDescription>
+
+                        {(form.watch("teams") || []).length > 0 ? (
+                          <div className="space-y-4">
+                            {(form.watch("teams") || []).map(
+                              (member, index) => (
+                                <div
+                                  key={index}
+                                  className="border rounded-lg p-4 space-y-3"
+                                >
+                                  <div className="flex items-center justify-between">
+                                    <div className="w-full flex items-center space-x-2">
+                                      <div className="max-w-40">
+                                        <Input
+                                          placeholder="Member Name"
+                                          value={member.name}
+                                          onChange={(e) => {
+                                            const currentTeam = [
+                                              ...(form.getValues().teams || []),
+                                            ];
+                                            if (currentTeam[index]) {
+                                              currentTeam[index].name =
+                                                e.target.value;
+                                              form.setValue(
+                                                "teams",
+                                                currentTeam
+                                              );
+                                            }
+                                          }}
+                                          className="max-w-xs"
+                                        />
+                                      </div>
+                                      <div className="max-w-40">
+                                        <Input
+                                          placeholder="Role (e.g. Developer, Designer)"
+                                          value={member.role}
+                                          onChange={(e) => {
+                                            const currentTeam = [
+                                              ...(form.getValues().teams || []),
+                                            ];
+                                            if (currentTeam[index]) {
+                                              currentTeam[index].role =
+                                                e.target.value;
+                                              form.setValue(
+                                                "teams",
+                                                currentTeam
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => {
+                                        const currentTeam =
+                                          form.getValues().teams || [];
+                                        const newTeam = currentTeam.filter(
+                                          (_, i) => i !== index
+                                        );
+                                        form.setValue("teams", newTeam);
+                                      }}
+                                    >
+                                      Remove
+                                    </Button>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <Label className="text-sm text-muted-foreground font-normal">
+                                      Contact Information (Optional)
+                                    </Label>
+                                    <div className="flex flex-col gap-2">
+                                      <div className="w-full flex items-center gap-2">
+                                        <Label className="w-20 text-xs md:text-sm">
+                                          Email:
+                                        </Label>
+                                        <Input
+                                          placeholder="Email address"
+                                          value={member.contact.email || ""}
+                                          onChange={(e) => {
+                                            const currentTeam = [
+                                              ...(form.getValues().teams || []),
+                                            ];
+                                            if (currentTeam[index]) {
+                                              currentTeam[index].contact = {
+                                                ...currentTeam[index].contact,
+                                                email: e.target.value,
+                                              };
+                                              form.setValue(
+                                                "teams",
+                                                currentTeam
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Label className="w-20 text-xs md:text-sm">
+                                          Twitter:
+                                        </Label>
+                                        <Input
+                                          placeholder="Twitter handle"
+                                          value={member.contact.twitter || ""}
+                                          onChange={(e) => {
+                                            const currentTeam = [
+                                              ...(form.getValues().teams || []),
+                                            ];
+                                            if (currentTeam[index]) {
+                                              currentTeam[index].contact = {
+                                                ...currentTeam[index].contact,
+                                                twitter: e.target.value,
+                                              };
+                                              form.setValue(
+                                                "teams",
+                                                currentTeam
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Label className="w-20 text-xs md:text-sm">
+                                          Telegram:
+                                        </Label>
+                                        <Input
+                                          placeholder="Telegram username"
+                                          value={member.contact.telegram || ""}
+                                          onChange={(e) => {
+                                            const currentTeam = [
+                                              ...(form.getValues().teams || []),
+                                            ];
+                                            if (currentTeam[index]) {
+                                              currentTeam[index].contact = {
+                                                ...currentTeam[index].contact,
+                                                telegram: e.target.value,
+                                              };
+                                              form.setValue(
+                                                "teams",
+                                                currentTeam
+                                              );
+                                            }
+                                          }}
+                                        />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <div className="border border-dashed rounded-lg p-6 text-center">
+                            <p className="text-muted-foreground">
+                              Add team members to showcase the people behind
+                              your project
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Campaign Images Upload */}
+                      <div className="space-y-4">
+                        <FormLabel>Campaign Images</FormLabel>
+                        <FormDescription>
+                          Upload multiple images for your campaign (max 10
+                          images)
+                        </FormDescription>
+                        <MultiFileUploader
+                          id="campaign-images-upload"
+                          onFilesUploaded={(urls) => {
+                            form.setValue("galleryImages", urls);
+                          }}
+                          maxFiles={10}
+                          accept="image/*"
+                        />
+                        {form.watch("galleryImages")?.length > 0 && (
+                          <div className="text-sm text-muted-foreground">
+                            {form.watch("galleryImages")?.length} images
+                            uploaded
+                          </div>
+                        )}
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -937,6 +1125,72 @@ const CreateCampaign = () => {
                                       <p className="font-medium">
                                         {phase.description || "No description"}
                                       </p>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Display Team Members in Review */}
+                        {(form.watch("teams") || []).length > 0 && (
+                          <div className="border rounded-lg p-4">
+                            <h4 className="font-medium mb-2">Team Members</h4>
+                            <div className="space-y-3 text-sm">
+                              {(form.watch("teams") || []).map(
+                                (member, index) => (
+                                  <div
+                                    key={index}
+                                    className="grid grid-cols-1 md:grid-cols-4 gap-2"
+                                  >
+                                    <div>
+                                      <p className="text-muted-foreground">
+                                        Name
+                                      </p>
+                                      <p className="font-medium">
+                                        {member.name || "Not provided"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground">
+                                        Role
+                                      </p>
+                                      <p className="font-medium">
+                                        {member.role || "Not provided"}
+                                      </p>
+                                    </div>
+                                    <div>
+                                      <p className="text-muted-foreground">
+                                        Contact
+                                      </p>
+                                      <div className="font-medium col-span-2">
+                                        {member.contact.email ||
+                                        member.contact.twitter ||
+                                        member.contact.telegram ? (
+                                          <div className="space-y-1">
+                                            {member.contact.email && (
+                                              <p>
+                                                Email: {member.contact.email}
+                                              </p>
+                                            )}
+                                            {member.contact.twitter && (
+                                              <p>
+                                                Twitter:{" "}
+                                                {member.contact.twitter}
+                                              </p>
+                                            )}
+                                            {member.contact.telegram && (
+                                              <p>
+                                                Telegram:{" "}
+                                                {member.contact.telegram}
+                                              </p>
+                                            )}
+                                          </div>
+                                        ) : (
+                                          "Not provided"
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 )
