@@ -36,6 +36,7 @@ import { useCurrentAccount } from "@mysten/dapp-kit";
 import { CustomBtn } from "@/components/wallet/ConnectButton";
 import { useEffect } from "react";
 import { useCreateCampaign } from "@/hooks/useFundXContract";
+import { formatDigest } from "@mysten/sui/utils";
 
 export type SubmissionStep = {
   id: string;
@@ -351,6 +352,13 @@ const CreateCampaign = () => {
             Your campaign is now live on the blockchain and ready to receive
             funding. Share it with your network to start gathering support!
           </p>
+          <Link
+            href={`https://suiscan.xyz/testnet/tx/${digest}`}
+            target="_blank"
+            className="text-muted-foreground mb-8"
+          >
+            Transaction Hash: {formatDigest(digest)}
+          </Link>
           <div className="space-y-4">
             <Button asChild size="lg" className="gradient-bg w-full">
               <Link href="/cLinkmpaign/new-campaign">View Your Campaign</Link>
