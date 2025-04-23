@@ -16,14 +16,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-
-import {
-  AlertCircle,
-  ArrowLeft,
-  ArrowRight,
-  CheckCircle,
-  Wallet,
-} from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -36,8 +29,19 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { storeBlob, createCampaign } from "@/lib/api";
-import MultiFileUploader from "@/components/pages/create/Uploader";
+import { storeFormData, createCampaign } from "@/lib/api";
+import MultiFileUploader from "@/components/pages/create/FileUploader";
+import { ProgressDialog } from "@/components/pages/create/ProgressDialog";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { CustomBtn } from "@/components/wallet/ConnectButton";
+import { useEffect } from "react";
+import { useCreateCampaign } from "@/hooks/useFundXContract";
+
+export type SubmissionStep = {
+  id: string;
+  label: string;
+  status: "pending" | "processing" | "complete" | "error";
+};
 
 const categories = [
   "Technology",
@@ -74,6 +78,7 @@ const formSchema = z.object({
         title: z.string().min(1, { message: "Phase title is required" }),
         timeline: z.string().min(1, { message: "Timeline is required" }),
         description: z.string().min(1, { message: "Description is required" }),
+        state: z.enum(["done", "in-progress", "future"]),
       })
     )
     .optional(),
@@ -90,7 +95,7 @@ const formSchema = z.object({
       })
     )
     .optional(),
-  galleryImages: z.array(z.string()).optional(),
+  galleryImages: z.array(z.string()),
   targetAmount: z
     .number()
     .min(100, { message: "Target amount must be at least 100" }),
@@ -99,6 +104,9 @@ const formSchema = z.object({
     .min(7, { message: "Duration must be at least 7 days" })
     .max(90, { message: "Duration cannot exceed 90 days" }),
   rewardType: z.enum(["none", "token", "nft"]),
+  creatorAddress: z.string(),
+  creatorName: z.string().optional(),
+  currency: z.string().optional(),
 });
 
 const CreateCampaign = () => {
@@ -106,6 +114,23 @@ const CreateCampaign = () => {
   const [formProgress, setFormProgress] = useState(25);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [showProgressDialog, setShowProgressDialog] = useState(false);
+  const [submissionSteps, setSubmissionSteps] = useState<SubmissionStep[]>([
+    { id: "collect", label: "Collecting form data", status: "pending" },
+    { id: "store", label: "Storing campaign data", status: "pending" },
+    { id: "sign", label: "Signing smart contract", status: "pending" },
+    { id: "create", label: "Creating campaign", status: "pending" },
+  ]);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [submitResult, setSubmitResult] = useState({
+    blobId: "",
+    digest: "",
+    objectId: "",
+  });
+  const account = useCurrentAccount();
+  const { digest, objectId, error, sign_to_create_campaign } =
+    useCreateCampaign();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -114,7 +139,9 @@ const CreateCampaign = () => {
       category: "",
       description: "",
       storyFields: [{ title: "", content: "" }],
-      roadmapPhases: [{ title: "", timeline: "", description: "" }],
+      roadmapPhases: [
+        { title: "", timeline: "", description: "", state: "future" },
+      ],
       teams: [
         {
           name: "",
@@ -126,8 +153,37 @@ const CreateCampaign = () => {
       targetAmount: 1000,
       duration: 30,
       rewardType: "none",
+      creatorAddress: "",
+      creatorName: "",
+      currency: "sui",
     },
   });
+
+  // Effect to observe the digest value from the hook and update UI accordingly
+  useEffect(() => {
+    if (digest) {
+      setSubmitResult((prev) => ({
+        ...prev,
+        digest,
+        objectId,
+      }));
+    }
+  }, [digest, objectId]);
+
+  // Effect to observe errors from the hook
+  useEffect(() => {
+    if (error) {
+      setErrorMessage(`Error signing transaction: ${error.message}`);
+      updateStepStatus(2, "error");
+    }
+  }, [error]);
+
+  // Update creatorAddress when account changes
+  useEffect(() => {
+    if (account) {
+      form.setValue("creatorAddress", account.address);
+    }
+  }, [account, form]);
 
   const nextTab = async () => {
     if (activeTab === "basics") {
@@ -170,29 +226,116 @@ const CreateCampaign = () => {
   };
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log(values);
+    setShowProgressDialog(true);
+    setErrorMessage("");
+    setIsSubmitting(true);
+    setIsSuccess(false);
+    setSubmitResult((prev) => ({
+      ...prev,
+      blobId: "",
+      digest: "",
+    }));
+
     try {
-      setIsSubmitting(true);
-      setIsSuccess(false);
+      // Step 1: Collect form data
+      setCurrentStep(0);
+      updateStepStatus(0, "processing");
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate processing time
+      updateStepStatus(0, "complete");
 
-      // Store campaign data in blob
-      const blobResult = await storeBlob(values);
+      // Step 2: Store campaign data on Walrus
+      setCurrentStep(1);
+      updateStepStatus(1, "processing");
+      let blobId: string;
+      try {
+        blobId = await storeFormData(values);
+        console.log(blobId);
+        updateStepStatus(1, "complete");
+        setSubmitResult((prev) => ({
+          ...prev,
+          blobId,
+        }));
+      } catch (error) {
+        console.error("Error storing form data:", error);
+        updateStepStatus(1, "error");
+        setErrorMessage("Failed to store campaign data. Please try again.");
+        throw error;
+      }
 
-      // Create campaign in database
-      const campaignResult = await createCampaign({
-        ...values,
-        blobId: blobResult.id,
-      });
+      // Step 3: Sign to create contract
+      setCurrentStep(2);
+      updateStepStatus(2, "processing");
 
-      console.log(campaignResult);
+      // Use the hook's function
+      sign_to_create_campaign(blobId, values.targetAmount, values.duration);
 
+      await new Promise((resolve) => setTimeout(resolve, 5000)); // Simulate processing time
+      updateStepStatus(2, "complete");
+
+      // Step 4: Create campaign in database
+      setCurrentStep(3);
+      updateStepStatus(3, "processing");
+
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        const request = {
+          ...values,
+          blobId,
+          txHash: submitResult.digest,
+          objectId: submitResult.objectId,
+        };
+        console.log("request for db: ", request);
+        const campaignResult = await createCampaign(request);
+        console.log(campaignResult);
+        updateStepStatus(3, "complete");
+      } catch (error) {
+        console.error("Error creating campaign:", error);
+        updateStepStatus(3, "error");
+        setErrorMessage(
+          "Failed to create campaign in database. Please try again."
+        );
+        throw error;
+      }
+
+      // All steps completed successfully
       setIsSuccess(true);
+      // Keep dialog open for a moment to show success
+      setTimeout(() => {
+        setShowProgressDialog(false);
+      }, 2000);
     } catch (error) {
-      console.error("Error creating campaign:", error);
-      // Handle error appropriately
+      console.error("Error in campaign creation process:", error);
+      // Error handling is done in each step
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  // Add this helper function after the onSubmit function:
+  const updateStepStatus = (
+    stepIndex: number,
+    status: "pending" | "processing" | "complete" | "error"
+  ) => {
+    setSubmissionSteps((steps) =>
+      steps.map((step, index) =>
+        index === stepIndex ? { ...step, status } : step
+      )
+    );
+  };
+
+  const retrySubmission = () => {
+    // Reset all steps to pending
+    setSubmissionSteps((steps) =>
+      steps.map((step) => ({ ...step, status: "pending" as const }))
+    );
+    setCurrentStep(0);
+    setErrorMessage("");
+    // Re-submit the form
+    form.handleSubmit(onSubmit)();
+  };
+
+  // No need to define ProgressDialog here as we're importing it
 
   if (isSuccess) {
     return (
@@ -284,7 +427,12 @@ const CreateCampaign = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit(onSubmit)(e);
+            }}
+          >
             <Card>
               <CardContent>
                 <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -302,7 +450,10 @@ const CreateCampaign = () => {
                         name="title"
                         render={({ field }) => (
                           <FormItem className="text-lg">
-                            <FormLabel>Campaign Title</FormLabel>
+                            <FormLabel className="gap-0.5">
+                              Campaign Title
+                              <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Input
                                 placeholder="Enter a clear, descriptive title"
@@ -323,7 +474,9 @@ const CreateCampaign = () => {
                         name="category"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Category</FormLabel>
+                            <FormLabel className="gap-0.5">
+                              Category <span className="text-red-500">*</span>
+                            </FormLabel>
                             <Select
                               onValueChange={field.onChange}
                               defaultValue={field.value}
@@ -355,7 +508,10 @@ const CreateCampaign = () => {
                         name="description"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Short Description</FormLabel>
+                            <FormLabel className="gap-0.5">
+                              Short Description
+                              <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <Textarea
                                 placeholder="Provide a brief summary of your project (50-200 characters)"
@@ -371,6 +527,33 @@ const CreateCampaign = () => {
                           </FormItem>
                         )}
                       />
+
+                      <div className="grid grid-cols-1 gap-6">
+                        <FormField
+                          control={form.control}
+                          name="creatorName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>
+                                Creator Name{" "}
+                                <span className="text-muted-foreground text-xs">
+                                  (optional)
+                                </span>
+                              </FormLabel>
+                              <FormControl>
+                                <Input
+                                  placeholder="Enter your company or organization"
+                                  {...field}
+                                />
+                              </FormControl>
+                              <FormDescription>
+                                How you want to be known to your backers
+                              </FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
 
                       <div className="pt-4">
                         <div className="flex justify-between border-t pt-4">
@@ -391,7 +574,10 @@ const CreateCampaign = () => {
                     <div className="space-y-6">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <FormLabel>Campaign Story</FormLabel>
+                          <FormLabel className="gap-0.5">
+                            Campaign Story
+                            <span className="text-red-500">*</span>
+                          </FormLabel>
                           <Button
                             type="button"
                             variant="outline"
@@ -492,7 +678,10 @@ const CreateCampaign = () => {
                       {/* Add Roadmap section */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <FormLabel>Project Roadmap</FormLabel>
+                          <FormLabel className="gap-0.5">
+                            Project Roadmap
+                            <span className="text-red-500">*</span>
+                          </FormLabel>
                           <Button
                             type="button"
                             variant="outline"
@@ -502,7 +691,12 @@ const CreateCampaign = () => {
                                 form.getValues().roadmapPhases || [];
                               form.setValue("roadmapPhases", [
                                 ...currentPhases,
-                                { title: "", timeline: "", description: "" },
+                                {
+                                  title: "",
+                                  timeline: "",
+                                  description: "",
+                                  state: "future",
+                                },
                               ]);
                             }}
                           >
@@ -610,6 +804,67 @@ const CreateCampaign = () => {
                                       />
                                     </div>
                                   </div>
+                                  <div className="mt-3 flex justify-between items-center">
+                                    <Label className="text-sm">
+                                      Phase State
+                                    </Label>
+                                    <Select
+                                      value={phase.state || "future"}
+                                      onValueChange={(value) => {
+                                        const currentPhases = [
+                                          ...(form.getValues().roadmapPhases ||
+                                            []),
+                                        ];
+                                        if (currentPhases[index]) {
+                                          // Update the current phase state
+                                          currentPhases[index].state = value as
+                                            | "done"
+                                            | "in-progress"
+                                            | "future";
+
+                                          // If this phase is set to in-progress, update other phases accordingly
+                                          if (value === "in-progress") {
+                                            currentPhases.forEach((p, i) => {
+                                              if (i < index) {
+                                                p.state = "done";
+                                              } else if (i > index) {
+                                                p.state = "future";
+                                              }
+                                            });
+                                          }
+
+                                          form.setValue(
+                                            "roadmapPhases",
+                                            currentPhases
+                                          );
+                                        }
+                                      }}
+                                    >
+                                      <SelectTrigger className="w-1/2 md:w-1/3">
+                                        <SelectValue placeholder="Select state" />
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="done">
+                                          <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                                            Done
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="in-progress">
+                                          <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-blue-500 mr-2"></div>
+                                            In Progress
+                                          </div>
+                                        </SelectItem>
+                                        <SelectItem value="future">
+                                          <div className="flex items-center">
+                                            <div className="w-3 h-3 rounded-full bg-gray-300 mr-2"></div>
+                                            Future
+                                          </div>
+                                        </SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
                                 </div>
                               )
                             )}
@@ -627,7 +882,9 @@ const CreateCampaign = () => {
                       {/* Team Members section */}
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
-                          <FormLabel>Team Members</FormLabel>
+                          <FormLabel className="gap-0.5">
+                            Team Members<span className="text-red-500">*</span>
+                          </FormLabel>
                           <Button
                             type="button"
                             variant="outline"
@@ -816,14 +1073,16 @@ const CreateCampaign = () => {
 
                       {/* Campaign Images Upload */}
                       <div className="space-y-4">
-                        <FormLabel>Campaign Images</FormLabel>
+                        <FormLabel className="gap-0.5">
+                          Campaign Images<span className="text-red-500">*</span>
+                        </FormLabel>
                         <FormDescription>
                           Upload multiple images for your campaign (max 10
                           images)
                         </FormDescription>
                         <MultiFileUploader
                           id="campaign-images-upload"
-                          onFilesUploaded={(urls) => {
+                          onFilesUploaded={(urls: string[]) => {
                             form.setValue("galleryImages", urls);
                           }}
                           maxFiles={10}
@@ -843,7 +1102,10 @@ const CreateCampaign = () => {
                           name="targetAmount"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Funding Goal (SUI)</FormLabel>
+                              <FormLabel className="gap-0.5">
+                                Funding Goal (SUI)
+                                <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
@@ -866,7 +1128,10 @@ const CreateCampaign = () => {
                           name="duration"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Campaign Duration (Days)</FormLabel>
+                              <FormLabel className="gap-0.5">
+                                Campaign Duration (Days)
+                                <span className="text-red-500">*</span>
+                              </FormLabel>
                               <FormControl>
                                 <Input
                                   type="number"
@@ -1072,6 +1337,23 @@ const CreateCampaign = () => {
                                 {form.watch("description") || "Not provided"}
                               </p>
                             </div>
+                            <div>
+                              <p className="text-muted-foreground">
+                                Creator Address
+                              </p>
+                              <p className="font-medium truncate">
+                                {form.watch("creatorAddress") ||
+                                  "Not connected"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground">
+                                Creator Name
+                              </p>
+                              <p className="font-medium">
+                                {form.watch("creatorName") || "Not provided"}
+                              </p>
+                            </div>
                           </div>
                         </div>
 
@@ -1116,6 +1398,20 @@ const CreateCampaign = () => {
                                       <p className="font-medium">
                                         {phase.timeline || "No timeline"}
                                       </p>
+                                      <div className="flex items-center mt-1">
+                                        <div
+                                          className={`w-2 h-2 rounded-full mr-1 ${
+                                            phase.state === "done"
+                                              ? "bg-green-500"
+                                              : phase.state === "in-progress"
+                                              ? "bg-blue-500"
+                                              : "bg-gray-300"
+                                          }`}
+                                        ></div>
+                                        <span className="text-xs capitalize">
+                                          {phase.state || "future"}
+                                        </span>
+                                      </div>
                                     </div>
                                     <div className="md:col-span-2">
                                       <p className="font-medium">
@@ -1223,20 +1519,19 @@ const CreateCampaign = () => {
                           </div>
                         </div>
 
-                        <div className="border rounded-lg p-4 bg-muted/50">
-                          <h4 className="font-medium mb-2">
-                            Connect Wallet to Continue
-                          </h4>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            To create your campaign on the blockchain,
-                            you&apos;ll need to connect your wallet and sign the
-                            transaction.
-                          </p>
-                          <Button type="button" className="gradient-bg">
-                            <Wallet className="mr-2 h-4 w-4" />
-                            Connect Wallet
-                          </Button>
-                        </div>
+                        {!account && (
+                          <div className="border rounded-lg p-4 bg-muted/50">
+                            <h4 className="font-medium mb-2">
+                              Connect Wallet to Continue
+                            </h4>
+                            <p className="text-sm text-muted-foreground mb-4">
+                              To create your campaign on the blockchain,
+                              you&apos;ll need to connect your wallet and sign
+                              the transaction.
+                            </p>
+                            <CustomBtn />
+                          </div>
+                        )}
                       </div>
 
                       <div className="pt-4">
@@ -1251,8 +1546,12 @@ const CreateCampaign = () => {
                           </Button>
                           <Button
                             type="submit"
-                            disabled={isSubmitting}
-                            className="gradient-bg"
+                            disabled={isSubmitting || !account}
+                            className={`${
+                              isSubmitting
+                                ? "cursor-progress"
+                                : "cursor-pointer"
+                            } gradient-bg`}
                           >
                             {isSubmitting ? "Creating..." : "Create Campaign"}
                           </Button>
@@ -1266,6 +1565,16 @@ const CreateCampaign = () => {
           </form>
         </Form>
       </div>
+      {/* Add this right before the final closing div */}
+      <ProgressDialog
+        open={showProgressDialog}
+        onOpenChange={setShowProgressDialog}
+        steps={submissionSteps}
+        currentStep={currentStep}
+        errorMessage={errorMessage}
+        isSuccess={isSuccess}
+        onRetry={retrySubmission}
+      />
     </div>
   );
 };

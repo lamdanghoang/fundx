@@ -20,6 +20,7 @@ interface CampaignFormData {
       telegram?: string;
     };
   }>;
+  galleryImages: Array<string>;
   targetAmount: number;
   duration: number;
   rewardType: "none" | "token" | "nft";
@@ -38,29 +39,70 @@ interface BlobResponse {
   createdAt: string;
 }
 
-export const storeBlob = async (
-  values: CampaignFormData
-): Promise<BlobResponse> => {
-  try {
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
-      {
-        method: "PUT",
-        body: JSON.stringify(values),
-        headers: {
-          "Content-Type": "application/octet-stream",
-        },
-        mode: "cors",
-      }
-    );
+export const storeImageFile = async (
+  url: string,
+  file: File
+): Promise<string> => {
+  const response = await fetch(url, {
+    method: "PUT",
+    body: file,
+    headers: {
+      "Content-Type": file.type || "application/octet-stream",
+    },
+    mode: "cors",
+  });
 
-    const result = await response.json();
-    console.log("Blob stored:", result);
-    return result;
-  } catch (error) {
-    console.error("Error storing blob:", error);
-    throw error;
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `Server responded with ${response.status}`
+    );
   }
+
+  const data = await response.json();
+  console.log("Blob stored:", data);
+
+  // Handle different result variants
+  if (data.newlyCreated) {
+    // If the blob was just created
+    return data.newlyCreated.blobObject.blobId;
+  } else if (data.alreadyCertified) {
+    // If the blob already exists and is certified
+    return data.alreadyCertified.blobId;
+  } else if (data.markedInvalid) {
+    throw new Error("Blob was marked invalid");
+  }
+  throw new Error(data.error.error_msg);
+};
+
+export const storeFormData = async (
+  values: CampaignFormData
+): Promise<string> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
+    {
+      method: "PUT",
+      body: JSON.stringify(values),
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      mode: "cors",
+    }
+  );
+
+  const result = await response.json();
+
+  // Handle different result variants
+  if (result.newlyCreated) {
+    // If the blob was just created
+    return result.newlyCreated.blobObject.blobId;
+  } else if (result.alreadyCertified) {
+    // If the blob already exists and is certified
+    return result.alreadyCertified.blobId;
+  } else if (result.markedInvalid) {
+    throw new Error("Blob was marked invalid");
+  }
+  throw new Error(result.error.error_msg);
 };
 
 export const readBlob = async (blobId: string): Promise<BlobResponse> => {
@@ -78,10 +120,13 @@ export const readBlob = async (blobId: string): Promise<BlobResponse> => {
 };
 
 export const createCampaign = async (
-  values: CampaignFormData & { blobId: string }
+  values: CampaignFormData & { blobId: string } & { objectId?: string } & {
+    txHash: string;
+  }
 ): Promise<Campaign> => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/create-campaign`;
   try {
-    const response = await fetch("/api/campaigns", {
+    const response = await fetch(url, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

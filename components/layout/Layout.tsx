@@ -12,7 +12,7 @@ import { customTheme } from "../wallet/customTheme";
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
-  localnet: { url: getFullnodeUrl("testnet") },
+  testnet: { url: getFullnodeUrl("testnet") },
   mainnet: { url: getFullnodeUrl("mainnet") },
 });
 const queryClient = new QueryClient();
@@ -24,7 +24,7 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <SuiClientProvider networks={networkConfig} defaultNetwork="localnet">
+      <SuiClientProvider networks={networkConfig} defaultNetwork="testnet">
         <WalletProvider theme={customTheme}>
           <div className="flex flex-col min-h-screen items-center">
             <Header />
