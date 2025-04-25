@@ -124,14 +124,18 @@ const CreateCampaign = () => {
   ]);
   const [currentStep, setCurrentStep] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const account = useCurrentAccount();
   const [submitResult, setSubmitResult] = useState({
     blobId: "",
     digest: "",
     objectId: "",
   });
-  const account = useCurrentAccount();
-  const { digest, objectId, error, sign_to_create_campaign } =
-    useCreateCampaign();
+  const {
+    digest,
+    createdObjectId: objectId,
+    error,
+    sign_to_create_campaign,
+  } = useCreateCampaign();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -162,12 +166,13 @@ const CreateCampaign = () => {
 
   // Effect to observe the digest value from the hook and update UI accordingly
   useEffect(() => {
-    if (digest) {
+    if (digest && objectId) {
       setSubmitResult((prev) => ({
         ...prev,
         digest,
         objectId,
       }));
+      updateStepStatus(2, "complete");
     }
   }, [digest, objectId]);
 
@@ -178,6 +183,57 @@ const CreateCampaign = () => {
       updateStepStatus(2, "error");
     }
   }, [error]);
+
+  // First, let's add a new useEffect to control step progression
+  // Add this with your other useEffect hooks
+
+  useEffect(() => {
+    // Only proceed to step 3 when both digest and objectId are available
+    if (digest && objectId && currentStep === 2) {
+      // Update result state first
+      setSubmitResult((prev) => ({
+        ...prev,
+        digest,
+        objectId,
+      }));
+      // Mark step 2 as complete
+      updateStepStatus(2, "complete");
+      // Then move to step 3
+      setCurrentStep(3);
+      // Start processing step 3
+      updateStepStatus(3, "processing");
+
+      // Now handle database creation
+      const createCampaignInDb = async () => {
+        try {
+          const request = {
+            ...form.getValues(),
+            blobId: submitResult.blobId,
+            txHash: digest,
+            objectId,
+          };
+          console.log("request for db: ", request);
+
+          const campaignResult = await createCampaign(request);
+          console.log(campaignResult);
+          updateStepStatus(3, "complete");
+
+          // Set success state
+          setIsSuccess(true);
+          // Keep dialog open for a moment to show success
+          setTimeout(() => {
+            setShowProgressDialog(false);
+          }, 2000);
+        } catch (dbError) {
+          updateStepStatus(3, "error");
+          setErrorMessage("Failed to create campaign in database");
+          console.error("Database error:", dbError);
+        }
+      };
+
+      createCampaignInDb();
+    }
+  }, [digest, objectId, currentStep, form, submitResult.blobId]);
 
   // Update creatorAddress when account changes
   useEffect(() => {
@@ -251,16 +307,14 @@ const CreateCampaign = () => {
       let blobId: string;
       try {
         blobId = await storeFormData(values);
-        console.log(blobId);
         updateStepStatus(1, "complete");
         setSubmitResult((prev) => ({
           ...prev,
           blobId,
         }));
       } catch (error) {
-        console.error("Error storing form data:", error);
         updateStepStatus(1, "error");
-        setErrorMessage("Failed to store campaign data. Please try again.");
+        setErrorMessage("Failed to store campaign data");
         throw error;
       }
 
@@ -268,45 +322,10 @@ const CreateCampaign = () => {
       setCurrentStep(2);
       updateStepStatus(2, "processing");
 
-      // Use the hook's function
+      // Initiate the transaction
       sign_to_create_campaign(blobId, values.targetAmount, values.duration);
-
-      await new Promise((resolve) => setTimeout(resolve, 5000)); // Simulate processing time
-      updateStepStatus(2, "complete");
-
-      // Step 4: Create campaign in database
-      setCurrentStep(3);
-      updateStepStatus(3, "processing");
-
-      try {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        const request = {
-          ...values,
-          blobId,
-          txHash: submitResult.digest,
-          objectId: submitResult.objectId,
-        };
-        console.log("request for db: ", request);
-        const campaignResult = await createCampaign(request);
-        console.log(campaignResult);
-        updateStepStatus(3, "complete");
-      } catch (error) {
-        console.error("Error creating campaign:", error);
-        updateStepStatus(3, "error");
-        setErrorMessage(
-          "Failed to create campaign in database. Please try again."
-        );
-        throw error;
-      }
-
-      // All steps completed successfully
-      setIsSuccess(true);
-      // Keep dialog open for a moment to show success
-      setTimeout(() => {
-        setShowProgressDialog(false);
-      }, 2000);
     } catch (error) {
-      console.error("Error in campaign creation process:", error);
+      console.error("Error in campaign creation:", error);
       // Error handling is done in each step
     } finally {
       setIsSubmitting(false);
@@ -352,13 +371,14 @@ const CreateCampaign = () => {
             Your campaign is now live on the blockchain and ready to receive
             funding. Share it with your network to start gathering support!
           </p>
-          <Link
-            href={`https://suiscan.xyz/testnet/tx/${digest}`}
-            target="_blank"
-            className="text-muted-foreground mb-8"
-          >
-            Transaction Hash: {formatDigest(digest)}
-          </Link>
+          <p className="text-sm text-muted-foreground mb-8">
+            <Link
+              href={`https://suiscan.xyz/testnet/tx/${digest}`}
+              target="_blank"
+            >
+              Transaction Hash: {formatDigest(digest)}
+            </Link>
+          </p>
           <div className="space-y-4">
             <Button asChild size="lg" className="gradient-bg w-full">
               <Link href="/cLinkmpaign/new-campaign">View Your Campaign</Link>

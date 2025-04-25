@@ -119,6 +119,38 @@ export const readBlob = async (blobId: string): Promise<BlobResponse> => {
   }
 };
 
+export const uploadImage = async (
+  imgId: string,
+  campaignId: string,
+  type: string
+) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/upload-image`;
+  const values = {
+    campaignId,
+    imgId,
+    type,
+  };
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload image");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error uploading image:", error);
+    throw error;
+  }
+};
+
 export const createCampaign = async (
   values: CampaignFormData & { blobId: string } & { objectId?: string } & {
     txHash: string;

@@ -1,9 +1,10 @@
-import React from "react";
+"use client";
 import { Button } from "@/components/ui/button";
 import CampaignHighlights from "@/components/campaign/CampaignHighlights";
 import { Rocket, Gem, Shield, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useCreateCampaign } from "@/hooks/useFundXContract";
 
 // Mock data for campaigns
 const mockCampaigns = [
@@ -271,3 +272,33 @@ const Home = () => {
 };
 
 export default Home;
+
+// function CampaignCreator() {
+//   const { sign_to_create_campaign, objectChanges, createdObjectId, isLoading } =
+//     useCreateCampaign();
+
+//   // When you want to display object changes in your UI
+//   return (
+//     <div>
+//       <button
+//         onClick={() => sign_to_create_campaign("my-ipfs-hash", 1000, 30)}
+//         disabled={isLoading}
+//       >
+//         Create Campaign
+//       </button>
+
+//       {createdObjectId && (
+//         <div>
+//           <h3>Created Campaign ID: {createdObjectId}</h3>
+//         </div>
+//       )}
+
+//       {objectChanges.length > 0 && (
+//         <div>
+//           <h3>Object Changes:</h3>
+//           <pre>{JSON.stringify(objectChanges, null, 2)}</pre>
+//         </div>
+//       )}
+//     </div>
+//   );
+// }
