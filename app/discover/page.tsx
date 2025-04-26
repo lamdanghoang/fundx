@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CampaignList from "@/components/campaign/CampaignList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, SlidersHorizontal, X } from "lucide-react";
 import { mockCampaigns } from "@/data/mockCampaigns";
+import { getCampaigns } from "@/lib/api";
+import { Campaign } from "@/lib/interface";
 
 const categories = [
   "All Categories",
@@ -35,6 +37,7 @@ const Discover = () => {
   const [filtersVisible, setFiltersVisible] = useState(false);
   const [isAlmostFunded, setIsAlmostFunded] = useState(false);
   const [isEndingSoon, setIsEndingSoon] = useState(false);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
 
   // This would be replaced with actual filtered data from API/blockchain
   const filteredCampaigns = mockCampaigns;
@@ -50,6 +53,14 @@ const Discover = () => {
     setIsAlmostFunded(false);
     setIsEndingSoon(false);
   };
+
+  useEffect(() => {
+    const fetchCampaignList = async () => {
+      const result = await getCampaigns(10, 0);
+      setCampaigns(result.data);
+    };
+    fetchCampaignList();
+  }, []);
 
   return (
     <div className="container py-8 px-4 md:px-0">
@@ -181,7 +192,7 @@ const Discover = () => {
 
       {filteredCampaigns.length > 0 ? (
         <>
-          <CampaignList campaigns={filteredCampaigns} />
+          <CampaignList campaigns={campaigns} />
           <div className="mt-8 text-center">
             <Button variant="outline">Load More</Button>
           </div>

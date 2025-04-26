@@ -27,16 +27,9 @@ interface CampaignFormData {
 }
 
 interface Campaign extends CampaignFormData {
-  id: string;
   blobId: string;
   createdAt: string;
   updatedAt: string;
-}
-
-interface BlobResponse {
-  id: string;
-  data: CampaignFormData;
-  createdAt: string;
 }
 
 export const storeImageFile = async (
@@ -105,7 +98,7 @@ export const storeFormData = async (
   throw new Error(result.error.error_msg);
 };
 
-export const readBlob = async (blobId: string): Promise<BlobResponse> => {
+export const readBlob = async (blobId: string) => {
   try {
     const response = await fetch(
       `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${blobId}`
@@ -174,9 +167,10 @@ export const createCampaign = async (
   }
 };
 
-export const getCampaigns = async (): Promise<Campaign[]> => {
+export const getCampaigns = async (limit: number, offset: number) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/campaigns?limit=${limit}&offset=${offset}`;
   try {
-    const response = await fetch("/api/campaigns");
+    const response = await fetch(url);
 
     if (!response.ok) {
       throw new Error("Failed to fetch campaigns");

@@ -311,6 +311,67 @@ export const useCreateContribution = () => {
   };
 };
 
+export interface FieldProps {
+  admin: string;
+  balance: bigint;
+  blob_id: string;
+  contributors: Map<string, bigint>;
+  creator: string;
+  deadline: number;
+  goal: bigint;
+  id: string;
+  milestones: Map<bigint, boolean>;
+  raised: bigint;
+}
+
+export const useGetObject = () => {
+  const suiClient = useSuiClient();
+
+  // Function with extensive debugging added
+  const get_object_fields = async (objectId: string) => {
+    // Reset states
+
+    try {
+      const object = await suiClient.getObject({
+        id: objectId,
+        options: {
+          showContent: true,
+        },
+      });
+      const content = object.data?.content;
+
+      if (content && content.dataType === "moveObject") {
+        const fields = content.fields as Record<string, any>;
+
+        const parsed: FieldProps = {
+          admin: fields.admin as string,
+          balance: BigInt(fields.balance as string),
+          blob_id: blobArrayToString(fields.blob_id),
+          contributors: transformContributors(fields.contributors),
+          creator: fields.creator as string,
+          deadline: Number(fields.deadline as string),
+          goal: BigInt(fields.goal as string),
+          id: fields.id.id as string,
+          milestones: transformMilestones(fields.milestones),
+          raised: BigInt(fields.raised as string),
+        };
+
+        console.log("Parsed Fields:", parsed);
+        return parsed;
+      } else {
+        console.error("Not moveObject or Object has no content.");
+        return null;
+      }
+    } catch (setupError) {
+      console.error("Error getting fields:", setupError);
+    }
+  };
+
+  return {
+    get_object_fields,
+  };
+};
+
 // Safer formatting functions
 export function toSuiU64(amount: number): string {
   if (isNaN(amount) || amount < 0) {
@@ -325,6 +386,15 @@ export function toSuiU64(amount: number): string {
   }
 }
 
+export function fromSuiU64(u64BigInt: bigint): number {
+  try {
+    const result = Number(u64BigInt) / 1e9;
+    return result;
+  } catch (error) {
+    throw new Error(`Error converting ${u64BigInt} from SUI U64:`);
+  }
+}
+
 function daysToSeconds(days: number): string {
   if (isNaN(days) || days < 0) {
     throw new Error(`Invalid duration: ${days}`);
@@ -336,4 +406,30 @@ function daysToSeconds(days: number): string {
   } catch (error) {
     throw new Error(`Error converting ${days} days to seconds: `);
   }
+}
+
+function transformContributors(contributorsField: any) {
+  const contents = contributorsField?.fields?.contents ?? [];
+  const result = new Map<string, bigint>();
+  for (const item of contents) {
+    const key = item.fields.key as string;
+    const value = BigInt(item.fields.value as string);
+    result.set(key, value);
+  }
+  return result;
+}
+
+function transformMilestones(milestonesField: any) {
+  const contents = milestonesField?.fields?.contents ?? [];
+  const result = new Map<bigint, boolean>();
+  for (const item of contents) {
+    const key = BigInt(item.fields.key as string);
+    const value = item.fields.value as boolean;
+    result.set(key, value);
+  }
+  return result;
+}
+
+function blobArrayToString(blob: number[]): string {
+  return String.fromCharCode(...blob);
 }

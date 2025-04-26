@@ -8,8 +8,13 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Wallet } from "lucide-react";
 import "@mysten/dapp-kit/dist/index.css";
+import { cn } from "@/lib/utils";
 
-export function CustomBtn() {
+interface CustomBtnProps {
+  className?: string;
+}
+
+export function CustomBtn({ className }: CustomBtnProps) {
   const [open, setOpen] = useState(false);
   const currentAccount = useCurrentAccount();
   const { mutate: disconnect } = useDisconnectWallet();
@@ -18,7 +23,10 @@ export function CustomBtn() {
     return (
       <Button
         variant="outline"
-        className="w-full mt-2 md:mt-0 md:w-40 md:inline-flex gradient-bg text-white"
+        className={cn(
+          "w-full mt-2 md:mt-0 md:w-40 md:inline-flex gradient-bg text-white",
+          className
+        )}
         onClick={() => disconnect()}
       >
         <Wallet className="mr-2 h-4 w-4" />
@@ -29,7 +37,12 @@ export function CustomBtn() {
   return (
     <ConnectModal
       trigger={
-        <Button className="w-full mt-2 md:mt-0 md:w-40 md:inline-flex gradient-bg">
+        <Button
+          className={cn(
+            "w-full mt-2 md:mt-0 md:w-40 md:inline-flex gradient-bg",
+            className
+          )}
+        >
           <Wallet className="mr-2 h-4 w-4" />
           Connect Wallet
         </Button>

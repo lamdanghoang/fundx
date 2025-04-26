@@ -4,6 +4,9 @@ import CampaignHighlights from "@/components/campaign/CampaignHighlights";
 import { Rocket, Gem, Shield, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getCampaigns } from "@/lib/api";
+import { Campaign } from "@/lib/interface";
 
 // Mock data for campaigns
 const mockCampaigns = [
@@ -133,11 +136,19 @@ const features = [
 ];
 
 const Home = () => {
+  const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
   const trendingCampaigns = [...mockCampaigns];
-  const newCampaigns = [...mockCampaigns].sort(() => Math.random() - 0.5);
   const endingSoonCampaigns = [...mockCampaigns].sort(
     (a, b) => a.daysLeft - b.daysLeft
   );
+
+  useEffect(() => {
+    const fetchCampaignList = async () => {
+      const result = await getCampaigns(10, 0);
+      setActiveCampaigns(result.data);
+    };
+    fetchCampaignList();
+  }, []);
 
   return (
     <>
@@ -225,7 +236,7 @@ const Home = () => {
         <div className="container px-4 md:px-6">
           <CampaignHighlights
             trendingCampaigns={trendingCampaigns}
-            newCampaigns={newCampaigns}
+            newCampaigns={activeCampaigns}
             endingSoonCampaigns={endingSoonCampaigns}
           />
           <div className="mt-8 text-center">

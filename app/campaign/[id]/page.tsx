@@ -13,16 +13,23 @@ import {
   Share2,
   Heart,
 } from "lucide-react";
-import { mockCampaigns } from "@/data/mockCampaigns";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
-import { useCreateContribution } from "@/hooks/useFundXContract";
+import {
+  FieldProps,
+  fromSuiU64,
+  useCreateContribution,
+  useGetObject,
+} from "@/hooks/useFundXContract";
 import { toast } from "sonner";
-import { formatDigest } from "@mysten/sui/utils";
+import { formatAddress, formatDigest } from "@mysten/sui/utils";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { createContribute } from "@/lib/api";
+import { createContribute, readBlob } from "@/lib/api";
+import { differenceInDays } from "date-fns";
+import { CampaignFormProps } from "@/lib/interface";
+import { CustomBtn } from "@/components/wallet/ConnectButton";
 
 interface TierProps {
   tier: string;
@@ -40,7 +47,7 @@ const tiers: TierProps[] = [
     description:
       "Be among the first to back our project and receive exclusive early access.",
     currency: "sui",
-    amount: 100,
+    amount: 1,
     current: 127,
     limit: 150,
     isActive: true,
@@ -50,7 +57,7 @@ const tiers: TierProps[] = [
     description:
       "Get premium access and exclusive NFT commemorating your contribution.",
     currency: "sui",
-    amount: 500,
+    amount: 5,
     current: 64,
     limit: null,
     isActive: true,
@@ -60,7 +67,7 @@ const tiers: TierProps[] = [
     description:
       "Receive governance tokens and voting rights in project decisions.",
     currency: "sui",
-    amount: 1000,
+    amount: 10,
     current: 32,
     limit: null,
     isActive: true,
@@ -69,14 +76,17 @@ const tiers: TierProps[] = [
 
 const CampaignDetail = () => {
   const [selectedTier, setSelectedTier] = useState<TierProps>(tiers[0]);
+  const [campaign, setCampaign] = useState<CampaignFormProps>();
+  const [objectFields, setObjectFields] = useState<FieldProps>();
   const { id } = useParams<{ id: string }>();
   const { digest, isLoading, error, sign_to_contribute } =
     useCreateContribution();
   const currentAccount = useCurrentAccount();
+  const { get_object_fields } = useGetObject();
 
-  // Effect to observe the digest value from the hook and update UI accordingly
+  // Effect to observe the digest value from the hook and update UI accordingly for contribution
   useEffect(() => {
-    if (!currentAccount) return;
+    if (!currentAccount || !objectFields) return;
     const createContributionInDb = async (
       tier: TierProps,
       sender: string,
@@ -84,7 +94,7 @@ const CampaignDetail = () => {
     ) => {
       try {
         const request = {
-          campaignId: "",
+          campaignId: objectFields.blob_id,
           walletAddress: sender,
           amount: tier.amount,
           tierType: tier.tier,
@@ -115,25 +125,49 @@ const CampaignDetail = () => {
         },
       });
     }
-  }, [digest, currentAccount, selectedTier]);
+  }, [digest, currentAccount, selectedTier, id]);
 
-  // Effect to observe errors from the hook
+  // Effect to observe errors from the hook for contribution
   useEffect(() => {
     if (error) {
       toast("Transaction Error", {
-        description: `Error: ${error}`,
+        description: `${error}`,
         action: {
           label: "Retry",
-          onClick: () => sign_to_contribute("", selectedTier.amount),
+          onClick: () => sign_to_contribute(id, selectedTier.amount),
         },
       });
     }
-  }, [error, selectedTier.amount, sign_to_contribute]);
+  }, [error, selectedTier.amount, id]);
 
-  // In a real app, fetch the campaign by ID from an API or blockchain
-  const campaign = mockCampaigns.find((c) => c.id === id);
+  // Fetch the campaign data by objectId
+  useEffect(() => {
+    const fetchCampaignData = async () => {
+      if (!id) return;
 
-  if (!campaign) {
+      try {
+        const fields = await get_object_fields(id);
+        if (!fields) {
+          console.error("No object fields found");
+          return;
+        }
+        setObjectFields(fields);
+
+        const blobData = await readBlob(fields.blob_id);
+        if (!blobData) {
+          console.error("No blob data found");
+          return;
+        }
+        setCampaign(blobData);
+      } catch (error) {
+        console.error("Failed to fetch campaign data", error);
+      }
+    };
+
+    fetchCampaignData();
+  }, [id]);
+
+  if (!campaign || !objectFields) {
     return (
       <div className="container py-12 text-center">
         <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
@@ -149,7 +183,9 @@ const CampaignDetail = () => {
     );
   }
 
-  const progress = (campaign.raisedAmount / campaign.targetAmount) * 100;
+  const progress = objectFields
+    ? (Number(objectFields.raised) / Number(objectFields.goal)) * 100
+    : 0;
 
   return (
     <div className="container py-8 px-4 md:px-0">
@@ -170,13 +206,21 @@ const CampaignDetail = () => {
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-8">
           <div className="aspect-video w-full overflow-hidden rounded-lg shadow-md">
-            <Image
-              src={campaign.imageUrl}
-              alt={campaign.title}
-              className="w-full h-full object-cover"
-              width={500}
-              height={500}
-            />
+            {campaign.galleryImages && campaign.galleryImages.length > 0 ? (
+              <Image
+                src={`https://aggregator.testnet.walrus.atalma.io/v1/blobs/${campaign.galleryImages[0]}`}
+                alt={campaign.title}
+                className="w-full h-full object-cover"
+                width={500}
+                height={500}
+              />
+            ) : (
+              <div className="flex items-center justify-center w-full h-full bg-muted">
+                <span className="text-muted-foreground">
+                  No Image Available
+                </span>
+              </div>
+            )}
           </div>
 
           <div className="md:hidden">
@@ -195,13 +239,16 @@ const CampaignDetail = () => {
               <div className="flex items-center">
                 <Avatar className="h-6 w-6 mr-2">
                   <AvatarImage
-                    src={`https://picsum.photos/seed/${campaign.creator.name}/100`}
+                    src={`https://picsum.photos/seed/${campaign.creatorAddress}/100`}
                   />
                   <AvatarFallback>
-                    {campaign.creator.name.substring(0, 2)}
+                    {campaign.creatorAddress.substring(0, 2)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="text-sm">{campaign.creator.name}</span>
+                <span className="text-sm">
+                  {campaign.creatorName ||
+                    formatAddress(campaign.creatorAddress)}
+                </span>
               </div>
               <div className="text-xs px-2 py-1 bg-brand-100 text-brand-800 rounded-full">
                 {campaign.category}
@@ -222,70 +269,45 @@ const CampaignDetail = () => {
                   {campaign.description}
                 </p>
 
-                <h3 className="text-xl font-bold mt-6 mb-3">
-                  About the Project
-                </h3>
-                <p>
-                  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed
-                  euismod, nisl vel ultricies lacinia, nisl nisl aliquam nisl,
-                  vel aliquam nisl nisl sit amet nisl. Sed euismod, nisl vel
-                  ultricies lacinia, nisl nisl aliquam nisl, vel aliquam nisl
-                  nisl sit amet nisl.
-                </p>
-
-                <h3 className="text-xl font-bold mt-6 mb-3">The Challenge</h3>
-                <p>
-                  Curabitur blandit tempus porttitor. Nullam quis risus eget
-                  urna mollis ornare vel eu leo. Nullam id dolor id nibh
-                  ultricies vehicula ut id elit. Donec ullamcorper nulla non
-                  metus auctor fringilla.
-                </p>
-
-                <h3 className="text-xl font-bold mt-6 mb-3">Our Solution</h3>
-                <p>
-                  Maecenas sed diam eget risus varius blandit sit amet non
-                  magna. Donec ullamcorper nulla non metus auctor fringilla.
-                  Etiam porta sem malesuada magna mollis euismod. Vestibulum id
-                  ligula porta felis euismod semper.
-                </p>
+                {campaign.storyFields.map((item, index) => (
+                  <div key={index}>
+                    <h3 className="text-xl font-bold mt-6 mb-3">
+                      {item.title}
+                    </h3>
+                    <p>{item.content}</p>
+                  </div>
+                ))}
 
                 <h3 className="text-xl font-bold mt-6 mb-3">Roadmap</h3>
                 <ul className="space-y-4">
-                  <li className="flex items-start">
-                    <div className="bg-green-500 h-6 w-6 rounded-full flex items-center justify-center text-white mr-3 mt-0.5">
-                      ✓
-                    </div>
-                    <div>
-                      <h4 className="font-bold">Phase 1: Research & Design</h4>
-                      <p className="text-muted-foreground">
-                        Completed on October 15, 2024
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-brand-500 h-6 w-6 rounded-full flex items-center justify-center text-white mr-3 mt-0.5">
-                      2
-                    </div>
-                    <div>
-                      <h4 className="font-bold">Phase 2: Development</h4>
-                      <p className="text-muted-foreground">
-                        In progress - Estimated completion: January 2025
-                      </p>
-                    </div>
-                  </li>
-                  <li className="flex items-start">
-                    <div className="bg-muted h-6 w-6 rounded-full flex items-center justify-center text-muted-foreground mr-3 mt-0.5">
-                      3
-                    </div>
-                    <div>
-                      <h4 className="font-bold">
-                        Phase 3: Testing & Deployment
-                      </h4>
-                      <p className="text-muted-foreground">
-                        Planned - Estimated completion: March 2025
-                      </p>
-                    </div>
-                  </li>
+                  {campaign.roadmapPhases.map((phase, index) => (
+                    <li key={index} className="flex items-start">
+                      <div
+                        className={`h-6 w-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
+                          phase.state === "done"
+                            ? "bg-green-500 text-white"
+                            : phase.state === "in-progress"
+                            ? "bg-brand-500 text-white"
+                            : "bg-muted text-muted-foreground"
+                        }`}
+                      >
+                        {phase.state === "done" ? "✓" : index + 1}
+                      </div>
+                      <div>
+                        <h4 className="font-bold">
+                          Phase {index + 1}: {phase.title}
+                        </h4>
+                        <p className="text-muted-foreground">
+                          {phase.state === "done"
+                            ? "Completed"
+                            : phase.state === "in-progress"
+                            ? "In progress"
+                            : "Planned"}{" "}
+                          - {phase.timeline}
+                        </p>
+                      </div>
+                    </li>
+                  ))}
                 </ul>
 
                 <h3 className="text-xl font-bold mt-6 mb-3">Team</h3>
@@ -434,14 +456,15 @@ const CampaignDetail = () => {
                   <div className="flex items-center mt-2 space-x-4">
                     <div className="flex items-center">
                       <Avatar className="h-6 w-6 mr-2">
-                        <AvatarImage
-                          src={`https://picsum.photos/seed/${campaign.creator.name}/100`}
-                        />
+                        <AvatarImage src={`https://picsum.photos/seed/`} />
                         <AvatarFallback>
-                          {campaign.creator.name.substring(0, 2)}
+                          {campaign.creatorAddress.substring(0, 2)}
                         </AvatarFallback>
                       </Avatar>
-                      <span className="text-sm">{campaign.creator.name}</span>
+                      <span className="text-sm">
+                        {campaign.creatorName ||
+                          formatAddress(campaign.creatorAddress)}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -449,32 +472,39 @@ const CampaignDetail = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span className="text-xl font-bold">
-                      {campaign.raisedAmount.toLocaleString()} SUI
+                      {fromSuiU64(objectFields.raised).toLocaleString()} SUI
                     </span>
                     <span className="text-muted-foreground">
-                      of {campaign.targetAmount.toLocaleString()} SUI
+                      of {fromSuiU64(objectFields.goal).toLocaleString()} SUI
                     </span>
                   </div>
                   <Progress value={progress} className="h-2" />
                   <div className="flex justify-between text-sm">
                     <div className="flex items-center">
                       <Users className="h-4 w-4 mr-1" />
-                      <span>{campaign.backers} backers</span>
+                      <span>{objectFields.contributors.size} backers</span>
                     </div>
                     <div className="flex items-center">
                       <Clock className="h-4 w-4 mr-1" />
-                      <span>{campaign.daysLeft} days left</span>
+                      <span>
+                        {differenceInDays(objectFields.deadline, Date.now())}{" "}
+                        days left
+                      </span>
                     </div>
                   </div>
                 </div>
 
-                <Button
-                  onClick={() => sign_to_contribute("", selectedTier.amount)}
-                  className="w-full gradient-bg cursor-pointer"
-                  disabled={isLoading}
-                >
-                  {isLoading ? "Contributing..." : "Back This Project"}
-                </Button>
+                {currentAccount ? (
+                  <Button
+                    onClick={() => sign_to_contribute(id, selectedTier.amount)}
+                    className="w-full gradient-bg cursor-pointer"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Contributing..." : "Back This Project"}
+                  </Button>
+                ) : (
+                  <CustomBtn className="md:w-full" />
+                )}
 
                 <div className="hidden md:flex gap-2">
                   <Button
@@ -542,7 +572,9 @@ const CampaignDetail = () => {
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Creator</span>
-                  <span className="font-medium">{campaign.creator.name}</span>
+                  <span className="font-medium">
+                    {formatAddress(objectFields.creator)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Blockchain</span>
@@ -552,12 +584,18 @@ const CampaignDetail = () => {
                   <span className="text-muted-foreground">Smart Contract</span>
                   <div className="flex items-center">
                     <span className="font-medium truncate max-w-[120px]">
-                      {campaign.creator.address}
+                      {formatAddress(id)}
                     </span>
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 ml-1"
+                      onClick={() =>
+                        window.open(
+                          `https://suiscan.xyz/testnet/object/${id}`,
+                          "_blank"
+                        )
+                      }
                     >
                       <LinkIcon className="h-3 w-3" />
                     </Button>
@@ -566,10 +604,6 @@ const CampaignDetail = () => {
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Category</span>
                   <span className="font-medium">{campaign.category}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Launch Date</span>
-                  <span className="font-medium">April 1, 2025</span>
                 </div>
               </div>
             </CardContent>

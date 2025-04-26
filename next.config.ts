@@ -11,6 +11,13 @@ const nextConfig: NextConfig = {
         pathname: "/seed/**",
         search: "",
       },
+      {
+        protocol: "https",
+        hostname: "aggregator.testnet.walrus.atalma.io",
+        port: "",
+        pathname: "/v1/blobs/**",
+        search: "",
+      },
     ],
   },
 };

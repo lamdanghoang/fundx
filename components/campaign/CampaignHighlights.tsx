@@ -2,18 +2,15 @@ import React from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CampaignList from "./CampaignList";
 import { CampaignProps } from "./CampaignCard";
+import { Campaign } from "@/lib/interface";
 
 interface CampaignHighlightsProps {
   trendingCampaigns: CampaignProps[];
-  newCampaigns: CampaignProps[];
+  newCampaigns: Campaign[];
   endingSoonCampaigns: CampaignProps[];
 }
 
-const CampaignHighlights = ({
-  trendingCampaigns,
-  newCampaigns,
-  endingSoonCampaigns,
-}: CampaignHighlightsProps) => {
+const CampaignHighlights = ({ newCampaigns }: CampaignHighlightsProps) => {
   return (
     <Tabs defaultValue="trending" className="w-full">
       <div className="flex justify-between items-center mb-4">
@@ -26,7 +23,7 @@ const CampaignHighlights = ({
       </div>
 
       <TabsContent value="trending" className="mt-0">
-        <CampaignList campaigns={trendingCampaigns} />
+        <CampaignList campaigns={newCampaigns} />
       </TabsContent>
 
       <TabsContent value="new" className="mt-0">
@@ -34,7 +31,7 @@ const CampaignHighlights = ({
       </TabsContent>
 
       <TabsContent value="ending-soon" className="mt-0">
-        <CampaignList campaigns={endingSoonCampaigns} />
+        <CampaignList campaigns={newCampaigns} />
       </TabsContent>
     </Tabs>
   );
