@@ -79,7 +79,7 @@ export const storeFormData = async (
   values: CampaignFormData
 ): Promise<string> => {
   const response = await fetch(
-    `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
+    `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=30`,
     {
       method: "PUT",
       body: JSON.stringify(values),
