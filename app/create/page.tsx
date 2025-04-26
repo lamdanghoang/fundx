@@ -29,7 +29,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import Link from "next/link";
-import { storeFormData, createCampaign } from "@/lib/api";
+import { storeFormData, createCampaign, uploadImage } from "@/lib/api";
 import MultiFileUploader from "@/components/pages/create/FileUploader";
 import { ProgressDialog } from "@/components/pages/create/ProgressDialog";
 import { useCurrentAccount } from "@mysten/dapp-kit";
@@ -216,6 +216,23 @@ const CreateCampaign = () => {
 
           const campaignResult = await createCampaign(request);
           console.log(campaignResult);
+
+          form.getValues().galleryImages.map(async (imgId, index) => {
+            let type = "normal";
+            if (index === 0) type = "cover";
+            try {
+              const req = {
+                campaignId: submitResult.blobId,
+                imgId,
+                type,
+              };
+              const imgResult = await uploadImage(req);
+              console.log(imgResult);
+            } catch (error) {
+              console.log("Failed to upload imgId");
+            }
+          });
+
           updateStepStatus(3, "complete");
 
           // Set success state

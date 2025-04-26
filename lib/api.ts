@@ -119,17 +119,13 @@ export const readBlob = async (blobId: string): Promise<BlobResponse> => {
   }
 };
 
-export const uploadImage = async (
-  imgId: string,
-  campaignId: string,
-  type: string
-) => {
+export const uploadImage = async (values: {
+  campaignId: string;
+  imgId: string;
+  type: string;
+}) => {
   const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/upload-image`;
-  const values = {
-    campaignId,
-    imgId,
-    type,
-  };
+
   try {
     const response = await fetch(url, {
       method: "POST",
