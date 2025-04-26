@@ -67,6 +67,7 @@ module fundx::fundx {
     public struct RefundAllEvent has copy, drop, store {
         campaign_id: ID,
         amount: u64,
+        total_recipients: u64,
     }
 
     public struct MileStoneApprovedEvent has copy, drop, store {
@@ -183,19 +184,29 @@ module fundx::fundx {
         event::emit(event);
     }
 
-    public entry fun refund_all(_: &Admin, campaign: &mut Campaign, ctx: &mut TxContext) {
+    public entry fun refund_all(_: &Admin, campaign: &mut Campaign, clock: &Clock, ctx: &mut TxContext) {
+        assert!(clock::timestamp_ms(clock) > campaign.deadline, EActiveCampaign);
+        assert!(campaign.raised < campaign.goal, ENotReachGoal);
+
         let mut list = vec_map::keys(&campaign.contributors);
+        let mut refunded_count = 0u64;
+        let mut total_refunded = 0u64;
 
         while (!vector::is_empty(&list)) {
             let addr = vector::pop_back(&mut list);
             let (_, amount) = vec_map::remove(&mut campaign.contributors, &addr);
             let cash = coin::take(&mut campaign.balance, amount, ctx);
             transfer::public_transfer(cash, addr);
+            refunded_count = refunded_count + 1;
+            total_refunded = total_refunded + amount;
         };
+
+        campaign.raised = 0;
 
         let event = RefundAllEvent {
             campaign_id: object::uid_to_inner(&campaign.id),
-            amount: campaign.raised,
+            amount: total_refunded,
+            total_recipients: refunded_count,
         };
 
         event::emit(event);

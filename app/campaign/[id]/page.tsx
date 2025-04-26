@@ -17,9 +17,118 @@ import { mockCampaigns } from "@/data/mockCampaigns";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { useCreateContribution } from "@/hooks/useFundXContract";
+import { toast } from "sonner";
+import { formatDigest } from "@mysten/sui/utils";
+import { useCurrentAccount } from "@mysten/dapp-kit";
+import { createContribute } from "@/lib/api";
+
+interface TierProps {
+  tier: string;
+  description: string;
+  currency: string;
+  amount: number;
+  current: number;
+  limit?: number | null;
+  isActive: boolean;
+}
+
+const tiers: TierProps[] = [
+  {
+    tier: "Early Supporter",
+    description:
+      "Be among the first to back our project and receive exclusive early access.",
+    currency: "sui",
+    amount: 100,
+    current: 127,
+    limit: 150,
+    isActive: true,
+  },
+  {
+    tier: "Core Supporter",
+    description:
+      "Get premium access and exclusive NFT commemorating your contribution.",
+    currency: "sui",
+    amount: 500,
+    current: 64,
+    limit: null,
+    isActive: true,
+  },
+  {
+    tier: "Premium Backer",
+    description:
+      "Receive governance tokens and voting rights in project decisions.",
+    currency: "sui",
+    amount: 1000,
+    current: 32,
+    limit: null,
+    isActive: true,
+  },
+];
 
 const CampaignDetail = () => {
+  const [selectedTier, setSelectedTier] = useState<TierProps>(tiers[0]);
   const { id } = useParams<{ id: string }>();
+  const { digest, isLoading, error, sign_to_contribute } =
+    useCreateContribution();
+  const currentAccount = useCurrentAccount();
+
+  // Effect to observe the digest value from the hook and update UI accordingly
+  useEffect(() => {
+    if (!currentAccount) return;
+    const createContributionInDb = async (
+      tier: TierProps,
+      sender: string,
+      txHash: string
+    ) => {
+      try {
+        const request = {
+          campaignId: "",
+          walletAddress: sender,
+          amount: tier.amount,
+          tierType: tier.tier,
+          currency: tier.currency,
+          txHash,
+        };
+        console.log("request for db: ", request);
+
+        const response = await createContribute(request);
+        console.log(response);
+      } catch (dbError) {
+        console.error("Database error:", dbError);
+      }
+    };
+
+    if (digest) {
+      createContributionInDb(selectedTier, currentAccount.address, digest);
+
+      toast("Transaction is successful", {
+        description: `Txn: ${formatDigest(digest)}`,
+        action: {
+          label: "View",
+          onClick: () =>
+            window.open(`https://suiscan.xyz/testnet/tx/${digest}`, "_blank"),
+        },
+        style: {
+          backgroundColor: "#0986f5",
+        },
+      });
+    }
+  }, [digest, currentAccount, selectedTier]);
+
+  // Effect to observe errors from the hook
+  useEffect(() => {
+    if (error) {
+      toast("Transaction Error", {
+        description: `Error: ${error}`,
+        action: {
+          label: "Retry",
+          onClick: () => sign_to_contribute("", selectedTier.amount),
+        },
+      });
+    }
+  }, [error, selectedTier.amount]);
 
   // In a real app, fetch the campaign by ID from an API or blockchain
   const campaign = mockCampaigns.find((c) => c.id === id);
@@ -359,8 +468,12 @@ const CampaignDetail = () => {
                   </div>
                 </div>
 
-                <Button className="w-full gradient-bg">
-                  Back This Project
+                <Button
+                  onClick={() => sign_to_contribute("", selectedTier.amount)}
+                  className="w-full gradient-bg cursor-pointer"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Contributing..." : "Back This Project"}
                 </Button>
 
                 <div className="hidden md:flex gap-2">
@@ -383,47 +496,40 @@ const CampaignDetail = () => {
                 <div className="pt-4 border-t">
                   <h3 className="font-bold mb-3">Pledge Tiers</h3>
                   <div className="space-y-3">
-                    <div className="p-3 border rounded-lg cursor-pointer hover:border-brand-500 transition-colors">
-                      <div className="flex justify-between mb-1">
-                        <h4 className="font-medium">Early Supporter</h4>
-                        <span className="text-sm font-bold">100 SUI</span>
+                    {tiers.map((tier: TierProps, index) => (
+                      <div
+                        key={index}
+                        onClick={() =>
+                          setSelectedTier((prev) => ({
+                            ...prev,
+                            ...tier,
+                          }))
+                        }
+                        className={`p-3 border rounded-lg cursor-pointer hover:border-brand-500 transition-colors select-none outline-2 duration-50 ${
+                          selectedTier.tier === tier.tier
+                            ? "outline-offset-0 outline-fund-500"
+                            : "outline-transparent"
+                        }`}
+                      >
+                        <div className="flex justify-between items-center mb-1">
+                          <h4 className="font-medium">{tier.tier}</h4>
+                          <span className="text-sm font-bold uppercase">
+                            {tier.amount} {tier.currency}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {tier.description}
+                        </p>
+                        <div className="text-xs text-muted-foreground">
+                          {tier.current} backers
+                          {tier.limit ? (
+                            <>. Limited ({tier.limit - tier.current} left)</>
+                          ) : (
+                            ""
+                          )}
+                        </div>
                       </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Be among the first to back our project and receive
-                        exclusive early access.
-                      </p>
-                      <div className="text-xs text-muted-foreground">
-                        127 backers • Limited (23 left)
-                      </div>
-                    </div>
-
-                    <div className="p-3 border rounded-lg cursor-pointer hover:border-brand-500 transition-colors">
-                      <div className="flex justify-between mb-1">
-                        <h4 className="font-medium">Core Supporter</h4>
-                        <span className="text-sm font-bold">500 SUI</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Get premium access and exclusive NFT commemorating your
-                        contribution.
-                      </p>
-                      <div className="text-xs text-muted-foreground">
-                        64 backers
-                      </div>
-                    </div>
-
-                    <div className="p-3 border rounded-lg cursor-pointer hover:border-brand-500 transition-colors">
-                      <div className="flex justify-between mb-1">
-                        <h4 className="font-medium">Premium Backer</h4>
-                        <span className="text-sm font-bold">1,000 SUI</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        Receive governance tokens and voting rights in project
-                        decisions.
-                      </p>
-                      <div className="text-xs text-muted-foreground">
-                        32 backers
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </div>
               </div>

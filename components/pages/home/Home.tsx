@@ -4,7 +4,6 @@ import CampaignHighlights from "@/components/campaign/CampaignHighlights";
 import { Rocket, Gem, Shield, Globe } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useCreateCampaign } from "@/hooks/useFundXContract";
 
 // Mock data for campaigns
 const mockCampaigns = [
@@ -274,14 +273,19 @@ const Home = () => {
 export default Home;
 
 // function CampaignCreator() {
-//   const { sign_to_create_campaign, objectChanges, createdObjectId, isLoading } =
-//     useCreateCampaign();
+//   const { sign_to_contribute, objectChanges, createdObjectId, isLoading } =
+//     useCreateContribution();
 
 //   // When you want to display object changes in your UI
 //   return (
 //     <div>
 //       <button
-//         onClick={() => sign_to_create_campaign("my-ipfs-hash", 1000, 30)}
+//         onClick={() =>
+//           sign_to_contribute(
+//             "0x2fb34fdee4fae98e869b9eb4e151df78d94ed78a973e4042881905a3ca64d623",
+//             1
+//           )
+//         }
 //         disabled={isLoading}
 //       >
 //         Create Campaign

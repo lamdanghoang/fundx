@@ -209,3 +209,36 @@ export const getCampaignById = async (id: string): Promise<Campaign> => {
     throw error;
   }
 };
+
+interface ContributionReq {
+  campaignId: string;
+  walletAddress: string;
+  amount: number;
+  tierType: string;
+  currency: string;
+}
+
+export const createContribute = async (
+  values: ContributionReq & { txHash: string }
+) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/create-contribution`;
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to create contribution");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error creating contribution:", error);
+    throw error;
+  }
+};

@@ -9,6 +9,7 @@ import {
 import { getFullnodeUrl } from "@mysten/sui/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { customTheme } from "../wallet/customTheme";
+import { Toaster } from "../ui/sonner";
 
 // Config options for the networks you want to connect to
 const { networkConfig } = createNetworkConfig({
@@ -29,6 +30,7 @@ const Layout = ({ children }: LayoutProps) => {
           <div className="flex flex-col min-h-screen items-center">
             <Header />
             <main className="flex-1">{children}</main>
+            <Toaster />
             <Footer />
           </div>
         </WalletProvider>
