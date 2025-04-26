@@ -229,7 +229,7 @@ const CreateCampaign = () => {
               const imgResult = await uploadImage(req);
               console.log(imgResult);
             } catch (error) {
-              console.log("Failed to upload imgId");
+              console.log("Failed to upload imgId: ", error);
             }
           });
 

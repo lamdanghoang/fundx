@@ -128,7 +128,7 @@ const CampaignDetail = () => {
         },
       });
     }
-  }, [error, selectedTier.amount]);
+  }, [error, selectedTier.amount, sign_to_contribute]);
 
   // In a real app, fetch the campaign by ID from an API or blockchain
   const campaign = mockCampaigns.find((c) => c.id === id);
