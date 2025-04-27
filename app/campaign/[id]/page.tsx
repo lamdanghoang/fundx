@@ -278,7 +278,9 @@ const CampaignDetail = () => {
             <Tabs defaultValue="story" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
                 <TabsTrigger value="story">Story</TabsTrigger>
-                <TabsTrigger value="updates">Updates</TabsTrigger>
+                <TabsTrigger disabled={true} value="updates">
+                  Updates
+                </TabsTrigger>
                 <TabsTrigger value="backers">Backers</TabsTrigger>
               </TabsList>
 
@@ -331,34 +333,22 @@ const CampaignDetail = () => {
 
                   <h3 className="text-xl font-bold mt-6 mb-3">Team</h3>
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                    <div className="text-center">
-                      <Avatar className="h-16 w-16 mx-auto">
-                        <AvatarImage src="https://picsum.photos/seed/team1/100" />
-                        <AvatarFallback>JD</AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-bold mt-2">Jane Doe</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Founder & CEO
-                      </p>
-                    </div>
-                    <div className="text-center">
-                      <Avatar className="h-16 w-16 mx-auto">
-                        <AvatarImage src="https://picsum.photos/seed/team2/100" />
-                        <AvatarFallback>JS</AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-bold mt-2">John Smith</h4>
-                      <p className="text-sm text-muted-foreground">CTO</p>
-                    </div>
-                    <div className="text-center">
-                      <Avatar className="h-16 w-16 mx-auto">
-                        <AvatarImage src="https://picsum.photos/seed/team3/100" />
-                        <AvatarFallback>AL</AvatarFallback>
-                      </Avatar>
-                      <h4 className="font-bold mt-2">Alice Lee</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Design Lead
-                      </p>
-                    </div>
+                    {campaign.teams.map((team, index) => (
+                      <div key={index} className="text-center">
+                        <Avatar className="h-16 w-16 mx-auto">
+                          <AvatarImage
+                            src={`https://picsum.photos/seed/team${
+                              index + 1
+                            }/100`}
+                          />
+                          <AvatarFallback>JD</AvatarFallback>
+                        </Avatar>
+                        <h4 className="font-bold mt-2">{team.name}</h4>
+                        <p className="text-sm text-muted-foreground">
+                          {team.role}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </TabsContent>
@@ -434,29 +424,29 @@ const CampaignDetail = () => {
 
               <TabsContent value="backers" className="pt-4">
                 <div className="space-y-4">
-                  {[...Array(5)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-full flex items-center p-4 border rounded-lg"
-                    >
-                      <Avatar className="h-10 w-10 mr-4">
-                        <AvatarImage
-                          src={`https://picsum.photos/seed/backer${i}/100`}
-                        />
-                        <AvatarFallback>B{i}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="font-medium">Backer {i + 1}</div>
-                        <div className="text-sm text-muted-foreground">
-                          Contributed {(Math.random() * 1000).toFixed(0)} SUI
+                  {Array.from(objectFields.contributors).map(
+                    ([address, amount], index) => (
+                      <div
+                        key={index}
+                        className="w-full flex items-center p-4 border rounded-lg"
+                      >
+                        <Avatar className="h-10 w-10 mr-4">
+                          <AvatarImage
+                            src={`https://picsum.photos/seed/backer${index}/100`}
+                          />
+                          <AvatarFallback>B{index}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <div className="font-medium">
+                            {formatAddress(address)}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            Contributed {amount.toFixed(0)} SUI
+                          </div>
                         </div>
                       </div>
-                      <div className="ml-auto text-xs text-muted-foreground">
-                        {Math.floor(Math.random() * 10) + 2} days ago
-                      </div>
-                    </div>
-                  ))}
-
+                    )
+                  )}
                   <Button variant="outline" className="w-fit">
                     Load More Backers
                   </Button>
@@ -605,9 +595,7 @@ const CampaignDetail = () => {
                     <span className="font-medium">Sui</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">
-                      Smart Contract
-                    </span>
+                    <span className="text-muted-foreground">Campaign ID</span>
                     <div className="flex items-center">
                       <span className="font-medium truncate max-w-[120px]">
                         {formatAddress(id)}
@@ -619,6 +607,27 @@ const CampaignDetail = () => {
                         onClick={() =>
                           window.open(
                             `https://suiscan.xyz/testnet/object/${id}`,
+                            "_blank"
+                          )
+                        }
+                      >
+                        <LinkIcon className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Blob ID</span>
+                    <div className="flex items-center">
+                      <span className="font-medium truncate max-w-[120px]">
+                        {formatAddress(objectFields.blob_id)}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6 ml-1"
+                        onClick={() =>
+                          window.open(
+                            `https://walruscan.com/testnet/blob/${objectFields.blob_id}`,
                             "_blank"
                           )
                         }

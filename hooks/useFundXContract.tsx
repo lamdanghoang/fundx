@@ -315,7 +315,7 @@ export interface FieldProps {
   admin: string;
   balance: bigint;
   blob_id: string;
-  contributors: Map<string, bigint>;
+  contributors: Map<string, number>;
   creator: string;
   deadline: number;
   goal: bigint;
@@ -410,11 +410,12 @@ function daysToSeconds(days: number): string {
 
 function transformContributors(contributorsField: any) {
   const contents = contributorsField?.fields?.contents ?? [];
-  const result = new Map<string, bigint>();
+  const result = new Map<string, number>();
   for (const item of contents) {
     const key = item.fields.key as string;
     const value = BigInt(item.fields.value as string);
-    result.set(key, value);
+    const amount = fromSuiU64(value);
+    result.set(key, amount);
   }
   return result;
 }
