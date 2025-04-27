@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CampaignList from "./CampaignList";
-import { CampaignProps } from "./CampaignCard";
 import { Campaign } from "@/lib/interface";
 import { getCampaigns } from "@/lib/api";
 import { Loader2 } from "lucide-react";

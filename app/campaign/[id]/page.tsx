@@ -13,7 +13,6 @@ import {
   Share2,
   Heart,
   Loader2,
-  Radar,
 } from "lucide-react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
