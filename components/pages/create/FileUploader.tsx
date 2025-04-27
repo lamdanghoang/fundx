@@ -23,7 +23,7 @@ export default function MultiFileUploader({
   maxFiles = 10,
   accept = "image/*",
   id,
-  uploadEndpoint = `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=5`,
+  uploadEndpoint = `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=45`,
   maxSizeInBytes = 5 * 1024 * 1024, // 5MB default
 }: MultiFileUploaderProps) {
   const [isUploading, setIsUploading] = useState(false);
