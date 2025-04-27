@@ -424,32 +424,38 @@ const CampaignDetail = () => {
 
               <TabsContent value="backers" className="pt-4">
                 <div className="space-y-4">
-                  {Array.from(objectFields.contributors).map(
-                    ([address, amount], index) => (
-                      <div
-                        key={index}
-                        className="w-full flex items-center p-4 border rounded-lg"
-                      >
-                        <Avatar className="h-10 w-10 mr-4">
-                          <AvatarImage
-                            src={`https://picsum.photos/seed/backer${index}/100`}
-                          />
-                          <AvatarFallback>B{index}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium">
-                            {formatAddress(address)}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            Contributed {amount.toFixed(0)} SUI
+                  {objectFields.contributors.size !== 0 ? (
+                    Array.from(objectFields.contributors).map(
+                      ([address, amount], index) => (
+                        <div
+                          key={index}
+                          className="w-full flex items-center p-4 border rounded-lg"
+                        >
+                          <Avatar className="h-10 w-10 mr-4">
+                            <AvatarImage
+                              src={`https://picsum.photos/seed/backer${index}/100`}
+                            />
+                            <AvatarFallback>B{index}</AvatarFallback>
+                          </Avatar>
+                          <div>
+                            <div className="font-medium">
+                              {formatAddress(address)}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              Contributed {amount.toFixed(0)} SUI
+                            </div>
                           </div>
                         </div>
-                      </div>
+                      )
                     )
+                  ) : (
+                    <div className="w-full flex items-center justify-center p-4 border rounded-lg">
+                      <span>No backers</span>
+                    </div>
                   )}
-                  <Button variant="outline" className="w-fit">
+                  {/* <Button variant="outline" className="w-fit">
                     Load More Backers
-                  </Button>
+                  </Button> */}
                 </div>
               </TabsContent>
             </Tabs>

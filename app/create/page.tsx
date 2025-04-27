@@ -398,7 +398,7 @@ const CreateCampaign = () => {
           </p>
           <div className="space-y-4">
             <Button asChild size="lg" className="gradient-bg w-full">
-              <Link href="/cLinkmpaign/new-campaign">View Your Campaign</Link>
+              <Link href={`/campaign/${objectId}`}>View Your Campaign</Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="w-full">
               <Link href="/">Return to Home</Link>
