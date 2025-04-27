@@ -99,7 +99,7 @@ const formSchema = z.object({
   galleryImages: z.array(z.string()),
   targetAmount: z
     .number()
-    .min(100, { message: "Target amount must be at least 100" }),
+    .min(10, { message: "Target amount must be at least 10" }),
   duration: z
     .number()
     .min(7, { message: "Duration must be at least 7 days" })
