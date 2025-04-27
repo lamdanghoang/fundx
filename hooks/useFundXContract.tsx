@@ -9,7 +9,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
 
 const MODULE_ADDRESS =
-  "0x5dda419f3a10a6d0f8add4008e0445210a35fcdfafb2fff99793a1790d83651a";
+  "0xc522e729312182481282eee223b12fe709de2426093db2a1160a1d42bcd1183d";
 const MODULE_NAME = "fundx";
 
 // Helper function to get the full module ID

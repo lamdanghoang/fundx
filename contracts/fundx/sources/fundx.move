@@ -224,7 +224,7 @@ module fundx::fundx {
     }
 
     public entry fun release_funds(_: &Admin, campaign: &mut Campaign, milestone: u64, amount: u64, clock: &Clock, ctx: &mut TxContext) {
-        assert!(clock::timestamp_ms(clock) < campaign.deadline, ENotExpiredCampaign);
+        assert!(clock::timestamp_ms(clock) > campaign.deadline, ENotExpiredCampaign);
         assert!(vec_map::contains(&campaign.milestones, &milestone) && *vec_map::get(&campaign.milestones, &milestone), EMilestoneInvalid);
         assert!(balance::value(&campaign.balance) >= amount, EInsufficientBalance);
 
