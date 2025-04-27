@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Loader2, Search, SlidersHorizontal, X } from "lucide-react";
 import { mockCampaigns } from "@/data/mockCampaigns";
 import { getCampaigns } from "@/lib/api";
 import { Campaign } from "@/lib/interface";
@@ -38,6 +38,7 @@ const Discover = () => {
   const [isAlmostFunded, setIsAlmostFunded] = useState(false);
   const [isEndingSoon, setIsEndingSoon] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   // This would be replaced with actual filtered data from API/blockchain
   const filteredCampaigns = mockCampaigns;
@@ -56,8 +57,10 @@ const Discover = () => {
 
   useEffect(() => {
     const fetchCampaignList = async () => {
+      setIsLoading(true);
       const result = await getCampaigns(10, 0);
       setCampaigns(result.data);
+      setIsLoading(false);
     };
     fetchCampaignList();
   }, []);
@@ -190,7 +193,14 @@ const Discover = () => {
         )}
       </div>
 
-      {filteredCampaigns.length > 0 ? (
+      {isLoading ? (
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-fund-800">Loading...</span>
+          <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        </div>
+      ) : filteredCampaigns.length > 0 ? (
         <>
           <CampaignList campaigns={campaigns} />
           <div className="mt-8 text-center">
