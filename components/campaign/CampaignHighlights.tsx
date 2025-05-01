@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CampaignList from "./CampaignList";
 import { Campaign } from "@/lib/interface";

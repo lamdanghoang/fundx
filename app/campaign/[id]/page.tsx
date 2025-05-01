@@ -27,10 +27,15 @@ import {
 import { toast } from "sonner";
 import { formatAddress, formatDigest } from "@mysten/sui/utils";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { createContribute, readBlob } from "@/lib/api";
+import {
+  createContribute,
+  getMilestonesCampaignById,
+  readBlob,
+} from "@/lib/api";
 import { differenceInDays } from "date-fns";
-import { CampaignFormProps } from "@/lib/interface";
+import { CampaignFormProps, Milestone } from "@/lib/interface";
 import { CustomBtn } from "@/components/wallet/ConnectButton";
+import MilestoneList from "@/components/milestone/MilestoneList";
 
 interface TierProps {
   tier: string;
@@ -78,6 +83,7 @@ const tiers: TierProps[] = [
 const CampaignDetail = () => {
   const [selectedTier, setSelectedTier] = useState<TierProps>(tiers[0]);
   const [campaign, setCampaign] = useState<CampaignFormProps>();
+  const [milestones, setMilestones] = useState<Milestone[]>([]);
   const [objectFields, setObjectFields] = useState<FieldProps>();
   const { id } = useParams<{ id: string }>();
   const {
@@ -166,6 +172,13 @@ const CampaignDetail = () => {
           return;
         }
         setCampaign(blobData);
+
+        const milestonesData = await getMilestonesCampaignById(id);
+        if (!milestonesData) {
+          console.error("No milestones data found");
+          return;
+        }
+        setMilestones(milestonesData.data.milestones);
       } catch (error) {
         console.error("Failed to fetch campaign data", error);
       } finally {
@@ -276,8 +289,9 @@ const CampaignDetail = () => {
             </div>
 
             <Tabs defaultValue="story" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
+              <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="story">Story</TabsTrigger>
+                <TabsTrigger value="milestones">Milestones</TabsTrigger>
                 <TabsTrigger disabled={true} value="updates">
                   Updates
                 </TabsTrigger>
@@ -351,6 +365,10 @@ const CampaignDetail = () => {
                     ))}
                   </div>
                 </div>
+              </TabsContent>
+
+              <TabsContent value="milestones" className="pt-4">
+                <MilestoneList milestones={milestones} campaignId={id} />
               </TabsContent>
 
               <TabsContent value="updates" className="pt-4">

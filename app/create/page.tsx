@@ -99,10 +99,10 @@ const formSchema = z.object({
   galleryImages: z.array(z.string()),
   targetAmount: z
     .number()
-    .min(10, { message: "Target amount must be at least 10" }),
+    .min(3, { message: "Target amount must be at least 3" }),
   duration: z
     .number()
-    .min(7, { message: "Duration must be at least 7 days" })
+    .min(3, { message: "Duration must be at least 3 days" })
     .max(90, { message: "Duration cannot exceed 90 days" }),
   rewardType: z.enum(["none", "token", "nft"]),
   creatorAddress: z.string(),

@@ -184,18 +184,53 @@ export const getCampaigns = async (limit: number, offset: number) => {
   }
 };
 
-export const getCampaignById = async (id: string): Promise<Campaign> => {
+export const getVotingCampains = async (limit: number, offset: number) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/voting-campaigns?limit=${limit}&offset=${offset}`;
   try {
-    const response = await fetch(`/api/campaigns/${id}`);
+    const response = await fetch(url);
 
     if (!response.ok) {
-      throw new Error("Failed to fetch campaign");
+      throw new Error("Failed to fetch voting campaigns");
     }
 
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error("Error fetching campaign:", error);
+    console.error("Error fetching voting campaigns:", error);
+    throw error;
+  }
+};
+
+export const getCampaignById = async (id: string) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/campaign?id=${id}`;
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch campaign with id");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching campaign with id:", error);
+    throw error;
+  }
+};
+
+export const getMilestonesCampaignById = async (id: string) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/milestones?id=${id}`;
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch milestones of campaign");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching milestones of  campaign:", error);
     throw error;
   }
 };

@@ -1,6 +1,6 @@
 export const mockCampaigns = [
   {
-    id: "crypto-garden",
+    id: "0x36a62214bb312faf5e73c3e4219cf83a7629f53de147f56198b6e57a0e2d4180",
     title: "CryptoGarden: Sustainable Blockchain Farm",
     description:
       "Building a sustainable farming ecosystem powered by blockchain technology and renewable energy.",

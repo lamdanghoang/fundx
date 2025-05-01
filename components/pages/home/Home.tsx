@@ -1,7 +1,8 @@
 "use client";
-import { Button } from "@/components/ui/button";
 import CampaignHighlights from "@/components/campaign/CampaignHighlights";
+import VotingCampaignSection from "@/components/milestone/VotingCampaignSection";
 import { Rocket, Gem, Shield, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -33,20 +34,6 @@ const features = [
 ];
 
 const Home = () => {
-  // const [activeCampaigns, setActiveCampaigns] = useState<Campaign[]>([]);
-  // const trendingCampaigns = [...mockCampaigns];
-  // const endingSoonCampaigns = [...mockCampaigns].sort(
-  //   (a, b) => a.daysLeft - b.daysLeft
-  // );
-
-  // useEffect(() => {
-  //   const fetchCampaignList = async () => {
-  //     const result = await getCampaigns(10, 0);
-  //     setActiveCampaigns(result.data);
-  //   };
-  //   fetchCampaignList();
-  // }, []);
-
   return (
     <>
       {/* Hero Section */}
@@ -110,17 +97,15 @@ const Home = () => {
               Why Choose Our Platform
             </h2>
             <p className="text-muted-foreground text-lg">
-              Revolutionizing crowdfunding with blockchain technology
+              We combine the best of blockchain technology with crowdfunding to
+              create a transparent, secure, and rewarding platform.
             </p>
           </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => (
-              <div
-                key={index}
-                className="bg-background p-6 rounded-lg shadow-sm border"
-              >
-                {feature.icon}
-                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {features.map((feature, i) => (
+              <div key={i} className="bg-background p-6 rounded-lg shadow-sm">
+                <div>{feature.icon}</div>
+                <h3 className="text-xl font-bold">{feature.title}</h3>
                 <p className="text-muted-foreground">{feature.description}</p>
               </div>
             ))}
@@ -128,7 +113,14 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Campaigns Section */}
+      {/* Voting Campaigns Section */}
+      <section className="py-16">
+        <div className="container px-4 md:px-6">
+          <VotingCampaignSection />
+        </div>
+      </section>
+
+      {/* Campaign Highlights Section */}
       <section className="py-16">
         <div className="container px-4 md:px-6">
           <CampaignHighlights />
@@ -145,26 +137,17 @@ const Home = () => {
       {/* CTA Section */}
       <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white md:rounded-2xl">
         <div className="container px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tight mb-4">
-            Ready to FundX?
-          </h2>
-          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            Join our community of creators and backers to bring innovative ideas
-            to life through decentralized funding.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Bring Your Idea to Life?
+            </h2>
+            <p className="text-lg mb-8">
+              Join thousands of innovative creators who have successfully funded
+              their projects through our platform.
+            </p>
             <Link href="/create">
-              <Button variant="secondary" size="lg">
-                Start a Campaign
-              </Button>
-            </Link>
-            <Link href="/discover">
-              <Button
-                variant="outline"
-                size="lg"
-                className="bg-transparent text-white border-white hover:bg-white/10"
-              >
-                Support a Project
+              <Button size="lg" variant="secondary">
+                Start Your Campaign
               </Button>
             </Link>
           </div>
