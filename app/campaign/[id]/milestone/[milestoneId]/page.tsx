@@ -13,6 +13,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Campaign, Milestone } from "@/lib/interface";
 import { getCampaignById, getMilestonesCampaignById } from "@/lib/api";
+import { useVoteMilestone } from "@/hooks/useFundXContract";
+import { formatDigest } from "@mysten/sui/utils";
 
 const MilestoneVoting = () => {
   const { id, milestoneId } = useParams<{
@@ -23,8 +25,8 @@ const MilestoneVoting = () => {
   const [milestone, setMilestone] = useState<Milestone>();
   const [vote, setVote] = useState<"approve" | "reject" | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVoted, setIsVoted] = useState(false);
+  const { sign_to_vote, digest, isLoading: load, error } = useVoteMilestone();
 
   useEffect(() => {
     const fetchCampaign = async () => {
@@ -44,25 +46,46 @@ const MilestoneVoting = () => {
     fetchCampaign();
   }, [id, milestoneId]);
 
+  // Effect to observe the digest value from the hook and update UI accordingly for contribution
+  useEffect(() => {
+    if (digest) {
+      toast("Voting is successful", {
+        description: `Txn: ${formatDigest(digest)}`,
+        action: {
+          label: "View",
+          onClick: () =>
+            window.open(`https://suiscan.xyz/testnet/tx/${digest}`, "_blank"),
+        },
+        style: {
+          backgroundColor: "#0986f5",
+        },
+      });
+    }
+  }, [digest]);
+
+  // Effect to observe errors from the hook for contribution
+  useEffect(() => {
+    if (error) {
+      toast("Voting Error", {
+        description: `${error}`,
+        action: {
+          label: "Retry",
+          onClick: () =>
+            sign_to_vote(id, +milestoneId, vote === "approve" ? true : false),
+        },
+      });
+    }
+  }, [error, id, milestoneId, vote]);
+
   const handleSubmitVote = () => {
     if (!vote) {
       toast.error("Please select your vote before submitting");
       return;
     }
 
-    setIsSubmitting(true);
+    sign_to_vote(id, +milestoneId, vote === "approve" ? true : false);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsVoted(true);
-
-      toast.success(
-        vote === "approve"
-          ? "You've approved this milestone! Thank you for your participation."
-          : "You've rejected this milestone. Thank you for your feedback."
-      );
-    }, 1500);
+    setIsVoted(true);
   };
 
   if (isLoading) {
@@ -264,10 +287,10 @@ const MilestoneVoting = () => {
 
                       <Button
                         onClick={handleSubmitVote}
-                        disabled={!vote || isSubmitting}
+                        disabled={!vote || load}
                         className="w-full"
                       >
-                        {isSubmitting ? "Submitting..." : "Submit Vote"}
+                        {load ? "Submitting..." : "Submit Vote"}
                       </Button>
                     </div>
                   </CardContent>

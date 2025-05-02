@@ -311,17 +311,150 @@ export const useCreateContribution = () => {
   };
 };
 
+export const useVoteMilestone = () => {
+  const [digest, setDigest] = useState<string>("");
+  const [objectChanges, setObjectChanges] = useState<SuiObjectChange[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  const account = useCurrentAccount();
+
+  const { mutate: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const suiClient = useSuiClient();
+
+  // Function with extensive debugging added
+  const sign_to_vote = async (
+    objectId: string,
+    milestone_id: number,
+    choice: boolean
+  ) => {
+    // Reset states
+    setError(null);
+    setIsLoading(true);
+    setObjectChanges([]);
+    setDigest("");
+
+    console.log("=== Voting Transaction Started ===");
+    console.log("Parameters:", { objectId, milestone_id, choice });
+    console.log("Current account:", account?.address);
+
+    try {
+      const txb = new Transaction();
+
+      console.log("Creating transaction block...");
+
+      // Build the transaction
+      txb.moveCall({
+        target: `${getModuleId()}::vote_milestone`,
+        arguments: [
+          txb.object(objectId),
+          txb.pure.u64(milestone_id),
+          txb.pure.bool(choice),
+          txb.object.clock(),
+        ],
+      });
+
+      console.log("Transaction block created, signing and executing...");
+
+      // Execute the transaction
+      signAndExecuteTransaction(
+        { transaction: txb },
+        {
+          onSuccess: async (result) => {
+            console.log("Initial transaction execution successful");
+            console.log("Transaction digest:", result.digest);
+            setDigest(result.digest);
+
+            try {
+              console.log("Waiting for transaction confirmation...");
+              const txResponse = await suiClient.waitForTransaction({
+                digest: result.digest,
+                options: {
+                  showEffects: true,
+                  showEvents: true,
+                  showObjectChanges: true,
+                },
+              });
+
+              console.log("Transaction confirmed");
+
+              // Full response logging for debugging (commented out for production)
+              // console.log("Full transaction response:", JSON.stringify(txResponse, null, 2));
+
+              // Check status safely
+              const txStatus = txResponse.effects?.status?.status;
+              console.log("Transaction status:", txStatus);
+
+              if (txStatus !== "success") {
+                const errorMessage =
+                  txResponse.effects?.status?.error || "Unknown error";
+                console.error("Transaction failed with status:", errorMessage);
+                throw new Error(`Transaction failed: ${errorMessage}`);
+              }
+
+              // Process object changes
+              if (
+                Array.isArray(txResponse.objectChanges) &&
+                txResponse.objectChanges.length > 0
+              ) {
+                console.log(
+                  `Found ${txResponse.objectChanges.length} object changes`
+                );
+                setObjectChanges(txResponse.objectChanges);
+              } else {
+                console.log("No object changes in transaction response");
+              }
+
+              console.log("=== Contribution Complete ===");
+            } catch (confirmError) {
+              console.error("Error confirming transaction:", confirmError);
+              setError(new Error(`Transaction confirmation failed`));
+            } finally {
+              setIsLoading(false);
+            }
+          },
+          onError: (execError) => {
+            console.error("Transaction execution failed:", execError);
+            setError(
+              new Error(`Failed to execute transaction: ${execError.message}`)
+            );
+            setIsLoading(false);
+          },
+        }
+      );
+    } catch (setupError) {
+      console.error("Error setting up transaction:", setupError);
+      setError(new Error(`Transaction setup failed: `));
+      setIsLoading(false);
+    }
+  };
+
+  return {
+    sign_to_vote,
+    digest,
+    objectChanges,
+    isLoading,
+    error,
+  };
+};
+
 export interface FieldProps {
-  admin: string;
-  balance: bigint;
-  blob_id: string;
-  contributors: Map<string, number>;
-  creator: string;
-  deadline: number;
-  goal: bigint;
   id: string;
-  milestones: Map<bigint, boolean>;
+  blob_id: string;
+  creator: string;
+  goal: bigint;
   raised: bigint;
+  balance: bigint;
+  duration: number;
+  deadline: number;
+  admin: string;
+  status: number;
+  quorum_percentage: number;
+  contributors: Map<string, number>;
+  milestones: Map<bigint, boolean>;
+  milestone_amounts: Map<bigint, bigint>;
+  milestone_votes: Map<bigint, Map<string, boolean>>;
+  milestone_vote_weights: Map<bigint, bigint>;
+  released_milestones: Map<bigint, boolean>;
 }
 
 export const useGetObject = () => {
@@ -344,16 +477,27 @@ export const useGetObject = () => {
         const fields = content.fields as Record<string, any>;
 
         const parsed: FieldProps = {
-          admin: fields.admin as string,
-          balance: BigInt(fields.balance as string),
-          blob_id: blobArrayToString(fields.blob_id),
-          contributors: transformContributors(fields.contributors),
-          creator: fields.creator as string,
-          deadline: Number(fields.deadline as string),
-          goal: BigInt(fields.goal as string),
           id: fields.id.id as string,
-          milestones: transformMilestones(fields.milestones),
+          blob_id: blobArrayToString(fields.blob_id),
+          creator: fields.creator as string,
+          goal: BigInt(fields.goal as string),
           raised: BigInt(fields.raised as string),
+          balance: BigInt(fields.balance as string),
+          duration: Number(fields.deadline as string),
+          deadline: Number(fields.deadline as string),
+          admin: fields.admin as string,
+          status: Number(fields.status as string),
+          quorum_percentage: Number(fields.quorum_percentage as string),
+          contributors: transformContributors(fields.contributors),
+          milestones: transformMilestones(fields.milestones),
+          milestone_amounts: transformMilestoneAmountOrVoteWeight(
+            fields.milestone_amounts
+          ),
+          milestone_votes: transformMilestoneVotes(fields.milestone_votes),
+          milestone_vote_weights: transformMilestoneAmountOrVoteWeight(
+            fields.milestone_vote_weights
+          ),
+          released_milestones: transformMilestones(fields.released_milestones),
         };
 
         console.log("Parsed Fields:", parsed);
@@ -426,6 +570,36 @@ function transformMilestones(milestonesField: any) {
   for (const item of contents) {
     const key = BigInt(item.fields.key as string);
     const value = item.fields.value as boolean;
+    result.set(key, value);
+  }
+  return result;
+}
+
+function transformMilestoneVotes(milestonesVotesField: any) {
+  const contents = milestonesVotesField?.fields?.contents ?? [];
+  const result = new Map<bigint, Map<string, boolean>>();
+  for (const milestoneVoteEntry of contents) {
+    const milestoneId = BigInt(milestoneVoteEntry.fields.key as string);
+    const votesMapField = milestoneVoteEntry.fields.value;
+    const voteContents = votesMapField?.fields?.contents ?? [];
+    const votes = new Map<string, boolean>();
+
+    for (const voteEntry of voteContents) {
+      const voterAddress = voteEntry.fields.key as string;
+      const hasVoted = voteEntry.fields.value as boolean;
+      votes.set(voterAddress, hasVoted);
+    }
+    result.set(milestoneId, votes);
+  }
+  return result;
+}
+
+function transformMilestoneAmountOrVoteWeight(milestoneField: any) {
+  const contents = milestoneField?.fields?.contents ?? [];
+  const result = new Map<bigint, bigint>();
+  for (const item of contents) {
+    const key = BigInt(item.fields.key as string);
+    const value = BigInt(item.fields.value as string);
     result.set(key, value);
   }
   return result;
