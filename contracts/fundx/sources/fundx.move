@@ -45,7 +45,7 @@ module fundx::fundx {
         duration: u64,
         deadline: u64,
         admin: address,
-        status: u8, // 0 = active, 1 = paused
+        status: u8, // 0 = active, 1 = paused, 2 = deleted
         quorum_percentage: u64,
         contributors: vec_map::VecMap<address, u64>, // address => amount
         milestones: vec_map::VecMap<u64, bool>, // milestone_id => approved
@@ -185,6 +185,10 @@ module fundx::fundx {
         };
 
         event::emit(event);
+    }
+
+    public entry fun delete_campaign(_: &Admin, campaign: &mut Campaign) {
+        campaign.status = 2;
     }
 
     public entry fun pause_campaign(_: &Admin, campaign: &mut Campaign) {

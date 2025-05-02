@@ -9,9 +9,9 @@ import { Button } from "@/components/ui/button";
 import { Clock, Users } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { differenceInDays } from "date-fns";
 import { formatAddress } from "@mysten/sui/utils";
 import { Campaign } from "@/lib/interface";
+import TimeLeft from "./TimeLeft";
 
 export interface CampaignProps {
   id: string;
@@ -92,9 +92,16 @@ const CampaignCard = ({
               <Users className="h-4 w-4 mr-1" />
               <span>{contributions.length} backers</span>
             </div>
-            <div className="flex items-center">
+            <div
+              className={`flex items-center ${
+                new Date(end_at).getTime() < Date.now() ? "text-red-500" : ""
+              }`}
+            >
               <Clock className="h-4 w-4 mr-1" />
-              <span>{differenceInDays(end_at, Date.now())} days left</span>
+              <TimeLeft
+                deadline={new Date(end_at).getTime()}
+                now={Date.now()}
+              />
             </div>
           </div>
         </div>

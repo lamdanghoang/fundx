@@ -32,10 +32,10 @@ import {
   getMilestonesCampaignById,
   readBlob,
 } from "@/lib/api";
-import { differenceInDays } from "date-fns";
 import { CampaignFormProps, Milestone } from "@/lib/interface";
 import { CustomBtn } from "@/components/wallet/ConnectButton";
 import MilestoneList from "@/components/milestone/MilestoneList";
+import TimeLeft from "@/components/campaign/TimeLeft";
 
 interface TierProps {
   tier: string;
@@ -520,12 +520,18 @@ const CampaignDetail = () => {
                         <Users className="h-4 w-4 mr-1" />
                         <span>{objectFields.contributors.size} backers</span>
                       </div>
-                      <div className="flex items-center">
+                      <div
+                        className={`flex items-center ${
+                          objectFields.deadline < Date.now()
+                            ? "text-red-500"
+                            : ""
+                        }`}
+                      >
                         <Clock className="h-4 w-4 mr-1" />
-                        <span>
-                          {differenceInDays(objectFields.deadline, Date.now())}{" "}
-                          days left
-                        </span>
+                        <TimeLeft
+                          deadline={objectFields.deadline}
+                          now={Date.now()}
+                        />
                       </div>
                     </div>
                   </div>
@@ -535,8 +541,8 @@ const CampaignDetail = () => {
                       onClick={() =>
                         sign_to_contribute(id, selectedTier.amount)
                       }
-                      className="w-full gradient-bg cursor-pointer"
-                      disabled={load}
+                      className="w-full gradient-bg cursor-pointer select-none"
+                      disabled={load || objectFields.deadline < Date.now()}
                     >
                       {load ? "Contributing..." : "Back This Project"}
                     </Button>
@@ -615,6 +621,10 @@ const CampaignDetail = () => {
                     </span>
                   </div>
                   <div className="flex justify-between">
+                    <span className="text-muted-foreground">Category</span>
+                    <span className="font-medium">{campaign.category}</span>
+                  </div>
+                  <div className="flex justify-between">
                     <span className="text-muted-foreground">Blockchain</span>
                     <span className="font-medium">Sui</span>
                   </div>
@@ -659,10 +669,6 @@ const CampaignDetail = () => {
                         <LinkIcon className="h-3 w-3" />
                       </Button>
                     </div>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Category</span>
-                    <span className="font-medium">{campaign.category}</span>
                   </div>
                 </div>
               </CardContent>
