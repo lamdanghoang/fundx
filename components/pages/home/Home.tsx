@@ -1,10 +1,13 @@
 "use client";
 import CampaignHighlights from "@/components/campaign/CampaignHighlights";
 import VotingCampaignSection from "@/components/milestone/VotingCampaignSection";
-import { Rocket, Gem, Shield, Globe } from "lucide-react";
+import { Rocket, Gem, Shield, Globe, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import Image from "next/image";
+import { useEffect, useState } from "react";
+import { getVotingCampains } from "@/lib/api";
+import { VotingCampaign } from "@/lib/interface";
 
 const features = [
   {
@@ -34,6 +37,20 @@ const features = [
 ];
 
 const Home = () => {
+  const [votingCampaigns, setVotingCampaigns] = useState<VotingCampaign[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCampaignList = async () => {
+      setIsLoading(true);
+
+      const votingCampaigns = await getVotingCampains(10, 0);
+      setVotingCampaigns(votingCampaigns.data);
+      setIsLoading(false);
+    };
+    fetchCampaignList();
+  }, []);
+
   return (
     <>
       {/* Hero Section */}
@@ -116,7 +133,34 @@ const Home = () => {
       {/* Voting Campaigns Section */}
       <section className="py-16">
         <div className="container px-4 md:px-6">
-          <VotingCampaignSection />
+          {isLoading ? (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">
+                  Campaigns Needing Your Vote
+                </h2>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-fund-800">Loading...</span>
+                <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700">
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                </div>
+              </div>
+            </div>
+          ) : votingCampaigns.length > 0 ? (
+            <VotingCampaignSection votingCampaigns={votingCampaigns} />
+          ) : (
+            <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold">
+                  Campaigns Needing Your Vote
+                </h2>
+              </div>
+              <div className="flex flex-col items-center gap-2">
+                <span>No campaigns</span>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
@@ -124,18 +168,18 @@ const Home = () => {
       <section className="py-16">
         <div className="container px-4 md:px-6">
           <CampaignHighlights />
-          <div className="mt-8 text-center">
+          {/* <div className="mt-8 text-center">
             <Link href="/discover">
               <Button variant="outline" size="lg" className="hover:bg-accent">
                 View All Campaigns
               </Button>
             </Link>
-          </div>
+          </div> */}
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white md:rounded-2xl">
+      <section className="mb-4 md:mb-0 py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white md:rounded-2xl">
         <div className="container px-4 md:px-6 text-center">
           <div className="max-w-2xl mx-auto">
             <h2 className="text-3xl font-bold mb-4">

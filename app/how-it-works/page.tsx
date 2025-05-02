@@ -136,7 +136,7 @@ const HowItWorks = () => {
 
       {/* Steps Section */}
       <section className="py-16 px-4 md:px-0">
-        <div className="container">
+        <div className="container md:px-4">
           <h2 className="text-3xl font-bold text-center mb-12">The Process</h2>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
@@ -170,7 +170,7 @@ const HowItWorks = () => {
 
       {/* Benefits Section */}
       <section className="py-16 px-4 md:px-0 bg-muted">
-        <div className="container">
+        <div className="container md:px-4">
           <h2 className="text-3xl font-bold text-center mb-4">
             Benefits of Blockchain Crowdfunding
           </h2>
@@ -195,8 +195,8 @@ const HowItWorks = () => {
 
       {/* Security Section */}
       <section className="py-16 px-4 md:px-0">
-        <div className="container">
-          <div className="flex flex-col md:flex-row items-center gap-8">
+        <div className="container md:px-4">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
             <div className="md:w-1/2">
               <Lock className="h-8 w-8 md:h-16 md:w-16 text-brand-600 mb-4" />
               <h2 className="text-3xl font-bold mb-4">
@@ -243,7 +243,7 @@ const HowItWorks = () => {
                 </li>
               </ul>
             </div>
-            <div className="md:w-1/2">
+            <div>
               <Image
                 src="https://picsum.photos/seed/security1/800/600"
                 alt="Blockchain Security"
@@ -258,7 +258,7 @@ const HowItWorks = () => {
 
       {/* FAQ Section */}
       <section className="py-16 px-4 md:px-0 bg-muted">
-        <div className="container">
+        <div className="container md:px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             Frequently Asked Questions
           </h2>
@@ -286,26 +286,19 @@ const HowItWorks = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="mb-8 md:mb-0 py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white">
-        <div className="px-4 md:px-0 container text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to FundX?</h2>
-          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            Join our community of creators and backers to bring innovative ideas
-            to life through decentralized funding.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      <section className="mb-4 md:mb-0 py-16 bg-gradient-to-r from-brand-600 to-fund-600 text-white md:rounded-2xl">
+        <div className="container px-4 md:px-6 text-center">
+          <div className="max-w-2xl mx-auto">
+            <h2 className="text-3xl font-bold mb-4">
+              Ready to Bring Your Idea to Life?
+            </h2>
+            <p className="text-lg mb-8">
+              Join thousands of innovative creators who have successfully funded
+              their projects through our platform.
+            </p>
             <Link href="/create">
-              <Button variant="secondary" size="lg">
-                Start a Campaign
-              </Button>
-            </Link>
-            <Link href="/discover">
-              <Button
-                variant="outline"
-                size="lg"
-                className="bg-transparent text-white border-white hover:bg-white/10"
-              >
-                Browse Projects
+              <Button size="lg" variant="secondary">
+                Start Your Campaign
               </Button>
             </Link>
           </div>

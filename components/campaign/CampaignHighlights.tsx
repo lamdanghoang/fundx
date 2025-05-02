@@ -39,8 +39,12 @@ const CampaignHighlights = () => {
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           </div>
-        ) : (
+        ) : activeCampaigns.length > 0 ? (
           <CampaignList campaigns={activeCampaigns} />
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <span>No campaigns</span>
+          </div>
         )}
       </TabsContent>
 
@@ -52,8 +56,12 @@ const CampaignHighlights = () => {
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           </div>
-        ) : (
+        ) : activeCampaigns.length > 0 ? (
           <CampaignList campaigns={activeCampaigns} />
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <span>No campaigns</span>
+          </div>
         )}
       </TabsContent>
 
@@ -65,8 +73,12 @@ const CampaignHighlights = () => {
               <Loader2 className="h-5 w-5 animate-spin" />
             </div>
           </div>
-        ) : (
+        ) : activeCampaigns.length > 0 ? (
           <CampaignList campaigns={activeCampaigns} />
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <span>No campaigns</span>
+          </div>
         )}
       </TabsContent>
     </Tabs>

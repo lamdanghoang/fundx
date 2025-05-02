@@ -13,11 +13,9 @@ import {
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Loader2, Search, SlidersHorizontal, X, Vote } from "lucide-react";
-import { mockCampaigns } from "@/data/mockCampaigns";
-import { getCampaigns } from "@/lib/api";
-import { Campaign } from "@/lib/interface";
+import { getCampaigns, getVotingCampains } from "@/lib/api";
+import { Campaign, VotingCampaign } from "@/lib/interface";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getCampaignsWithMilestonesInVoting } from "@/data/mockMilestones";
 import VotingCampaignSection from "@/components/milestone/VotingCampaignSection";
 
 const categories = [
@@ -41,13 +39,10 @@ const Discover = () => {
   const [isAlmostFunded, setIsAlmostFunded] = useState(false);
   const [isEndingSoon, setIsEndingSoon] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [votingCampaigns, setVotingCampaigns] = useState<VotingCampaign[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("all");
-
-  // This would be replaced with actual filtered data from API/blockchain
-  const filteredCampaigns = mockCampaigns;
-  const campaignsInVoting = getCampaignsWithMilestonesInVoting(mockCampaigns);
 
   const toggleFilters = () => {
     setFiltersVisible(!filtersVisible);
@@ -66,6 +61,9 @@ const Discover = () => {
       setIsLoading(true);
       const campaigns = await getCampaigns(10, 0);
       setCampaigns(campaigns.data);
+
+      const votingCampaigns = await getVotingCampains(10, 0);
+      setVotingCampaigns(votingCampaigns.data);
       setIsLoading(false);
     };
     fetchCampaignList();
@@ -89,7 +87,7 @@ const Discover = () => {
           <TabsTrigger value="all">All Campaigns</TabsTrigger>
           <TabsTrigger value="voting" className="flex items-center">
             <Vote className="h-4 w-4 mr-1" />
-            Needs Voting ({campaignsInVoting.length})
+            Needs Voting ({votingCampaigns.length})
           </TabsTrigger>
         </TabsList>
         <div className="mt-4">
@@ -219,7 +217,7 @@ const Discover = () => {
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             </div>
-          ) : filteredCampaigns.length > 0 ? (
+          ) : campaigns.length > 0 ? (
             <>
               <CampaignList campaigns={campaigns} />
               <div className="mt-8 text-center">
@@ -238,8 +236,8 @@ const Discover = () => {
         </TabsContent>
 
         <TabsContent value="voting" className="mt-0">
-          {campaignsInVoting.length > 0 ? (
-            <VotingCampaignSection />
+          {votingCampaigns.length > 0 ? (
+            <VotingCampaignSection votingCampaigns={votingCampaigns} />
           ) : (
             <div className="text-center py-12">
               <h3 className="text-xl font-medium mb-2">
