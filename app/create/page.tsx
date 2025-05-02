@@ -102,7 +102,7 @@ const formSchema = z.object({
     .min(3, { message: "Target amount must be at least 3" }),
   duration: z
     .number()
-    .min(3, { message: "Duration must be at least 3 days" })
+    .min(1, { message: "Duration must be at least 1 days" })
     .max(90, { message: "Duration cannot exceed 90 days" }),
   rewardType: z.enum(["none", "token", "nft"]),
   creatorAddress: z.string(),

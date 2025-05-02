@@ -383,7 +383,7 @@ module fundx::fundx {
         assert!(!vec_map::contains(&campaign.released_milestones, &milestone), EMilestoneAlreadyReleased);
         assert!(balance::value(&campaign.balance) >= amount, EInsufficientBalance);
 
-        // Check votes >= 50%
+        // Check votes >= quorum_percentage
         let votes_weight = *vec_map::get(&campaign.milestone_vote_weights, &milestone);
         assert!(votes_weight * 100 >= campaign.raised * campaign.quorum_percentage, EMilestoneNotApproved);
 
