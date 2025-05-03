@@ -542,9 +542,19 @@ const CampaignDetail = () => {
                         sign_to_contribute(id, selectedTier.amount)
                       }
                       className="w-full gradient-bg cursor-pointer select-none"
-                      disabled={load || objectFields.deadline < Date.now()}
+                      disabled={
+                        load ||
+                        objectFields.deadline <= Date.now() ||
+                        objectFields.status !== 0
+                      }
                     >
-                      {load ? "Contributing..." : "Back This Project"}
+                      {load && "Contributing..."}
+                      {objectFields.deadline < Date.now() && "Expired To Back"}
+                      {objectFields.status !== 0 && "Pending To Back"}
+                      {!load &&
+                        objectFields.deadline > Date.now() &&
+                        objectFields.status === 0 &&
+                        "Back This Campaign"}
                     </Button>
                   ) : (
                     <CustomBtn className="md:w-full" />
