@@ -68,14 +68,16 @@ const MilestoneVoting = () => {
         },
       });
 
-      const voteResult =
-        campaign.goal > 0
-          ? findAmountByWalletAddress(
-              campaign.contributions,
-              currentAccount.address
-            ) || 0 / campaign.goal
-          : 0;
-      updateVotes(id, milestoneId, { voteResult });
+      if (vote === "approve") {
+        const voteResult =
+          campaign.goal > 0
+            ? findAmountByWalletAddress(
+                campaign.contributions,
+                currentAccount.address
+              ) || 0 / campaign.goal
+            : 0;
+        updateVotes(id, milestoneId, { voteResult });
+      }
 
       setIsVoted(true);
     }
