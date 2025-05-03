@@ -96,7 +96,9 @@ const formSchema = z.object({
       })
     )
     .optional(),
-  galleryImages: z.array(z.string()),
+  galleryImages: z
+    .array(z.string())
+    .min(1, { message: "Upload at least 1 image" }),
   targetAmount: z
     .number()
     .min(3, { message: "Target amount must be at least 3" }),
