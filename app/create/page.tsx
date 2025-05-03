@@ -72,7 +72,7 @@ const formSchema = z.object({
         content: z.string().min(1, { message: "Section content is required" }),
       })
     )
-    .optional(),
+    .min(1, { message: "Campaign story must have least 1 section" }),
   roadmapPhases: z
     .array(
       z.object({
@@ -82,7 +82,7 @@ const formSchema = z.object({
         state: z.enum(["done", "in-progress", "future"]),
       })
     )
-    .optional(),
+    .min(1, { message: "Roadmap must have at least 1 roadmap phase" }),
   teams: z
     .array(
       z.object({
@@ -95,10 +95,10 @@ const formSchema = z.object({
         }),
       })
     )
-    .optional(),
+    .min(1, { message: "Team must have at least 1 member" }),
   galleryImages: z
     .array(z.string())
-    .min(1, { message: "Upload at least 1 image" }),
+    .min(1, { message: "You must select and upload at least 1 image" }),
   targetAmount: z
     .number()
     .min(3, { message: "Target amount must be at least 3" }),
@@ -273,11 +273,35 @@ const CreateCampaign = () => {
         setFormProgress(50);
       }
     } else if (activeTab === "details") {
-      // Only trigger validation on the required fields
-      const isDetailsValid = await form.trigger(["targetAmount", "duration"]);
-      if (isDetailsValid) {
+      // Validate each field individually to ensure errors are shown
+      const isStoryFieldsValid = await form.trigger("storyFields");
+      const isRoadmapPhasesValid = await form.trigger("roadmapPhases");
+      const isTeamsValid = await form.trigger("teams");
+      const isGalleryImagesValid = await form.trigger("galleryImages");
+      const isTargetAmountValid = await form.trigger("targetAmount");
+      const isDurationValid = await form.trigger("duration");
+
+      // Only proceed if all validations pass
+      if (
+        isStoryFieldsValid &&
+        isRoadmapPhasesValid &&
+        isTeamsValid &&
+        isGalleryImagesValid &&
+        isTargetAmountValid &&
+        isDurationValid
+      ) {
         setActiveTab("rewards");
         setFormProgress(75);
+      } else {
+        // Show error messages for each field
+        form.trigger([
+          "storyFields",
+          "roadmapPhases",
+          "teams",
+          "galleryImages",
+          "targetAmount",
+          "duration",
+        ]);
       }
     } else if (activeTab === "rewards") {
       const isRewardsValid = await form.trigger(["rewardType"]);
@@ -720,6 +744,11 @@ const CreateCampaign = () => {
                             </p>
                           </div>
                         )}
+                        {form.formState.errors.storyFields && (
+                          <p className="text-sm text-destructive mt-2">
+                            {form.formState.errors.storyFields.message}
+                          </p>
+                        )}
                       </div>
 
                       {/* Add Roadmap section */}
@@ -924,6 +953,11 @@ const CreateCampaign = () => {
                             </p>
                           </div>
                         )}
+                        {form.formState.errors.roadmapPhases && (
+                          <p className="text-sm text-destructive mt-2">
+                            {form.formState.errors.roadmapPhases.message}
+                          </p>
+                        )}
                       </div>
 
                       {/* Team Members section */}
@@ -1116,6 +1150,11 @@ const CreateCampaign = () => {
                             </p>
                           </div>
                         )}
+                        {form.formState.errors.teams && (
+                          <p className="text-sm text-destructive mt-2">
+                            {form.formState.errors.teams.message}
+                          </p>
+                        )}
                       </div>
 
                       {/* Campaign Images Upload */}
@@ -1135,6 +1174,11 @@ const CreateCampaign = () => {
                           maxFiles={10}
                           accept="image/*"
                         />
+                        {form.formState.errors.galleryImages && (
+                          <p className="text-sm text-destructive">
+                            {form.formState.errors.galleryImages.message}
+                          </p>
+                        )}
                         {(form.watch("galleryImages") || []).length > 0 && (
                           <div className="text-sm text-muted-foreground">
                             {(form.watch("galleryImages") || []).length} images
@@ -1223,7 +1267,10 @@ const CreateCampaign = () => {
                         name="rewardType"
                         render={({ field }) => (
                           <FormItem className="space-y-3">
-                            <FormLabel>Reward Type</FormLabel>
+                            <FormLabel className="gap-0.5">
+                              Reward Type
+                              <span className="text-red-500">*</span>
+                            </FormLabel>
                             <FormControl>
                               <RadioGroup
                                 onValueChange={field.onChange}
