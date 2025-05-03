@@ -69,13 +69,14 @@ const MilestoneVoting = () => {
       });
 
       if (vote === "approve") {
-        const voteResult =
-          campaign.goal > 0
-            ? findAmountByWalletAddress(
-                campaign.contributions,
-                currentAccount.address
-              ) || 0 / campaign.goal
-            : 0;
+        const weight =
+          findAmountByWalletAddress(
+            campaign.contributions,
+            currentAccount.address
+          ) || 0;
+
+        const total_weight = campaign.current_amount;
+        const voteResult = (weight / total_weight) * 100;
         updateVotes(id, milestoneId, { voteResult });
       }
 
