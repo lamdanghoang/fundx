@@ -60,6 +60,7 @@ const MilestoneVoting = () => {
           backgroundColor: "#0986f5",
         },
       });
+      setIsVoted(true);
     }
   }, [digest]);
 
@@ -84,8 +85,6 @@ const MilestoneVoting = () => {
     }
 
     sign_to_vote(id, +milestoneId, vote === "approve" ? true : false);
-
-    setIsVoted(true);
   };
 
   if (isLoading) {

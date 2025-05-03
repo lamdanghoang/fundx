@@ -147,7 +147,7 @@ const Home = () => {
                 </div>
               </div>
             </div>
-          ) : votingCampaigns.length > 0 ? (
+          ) : !isLoading && votingCampaigns.length > 0 ? (
             <VotingCampaignSection votingCampaigns={votingCampaigns} />
           ) : (
             <div className="space-y-6">
