@@ -12,9 +12,14 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Campaign, Milestone } from "@/lib/interface";
-import { getCampaignById, getMilestonesCampaignById } from "@/lib/api";
+import {
+  getCampaignById,
+  getMilestonesCampaignById,
+  updateVotes,
+} from "@/lib/api";
 import { useVoteMilestone } from "@/hooks/useFundXContract";
 import { formatDigest } from "@mysten/sui/utils";
+import { useCurrentAccount } from "@mysten/dapp-kit";
 
 const MilestoneVoting = () => {
   const { id, milestoneId } = useParams<{
@@ -27,11 +32,13 @@ const MilestoneVoting = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVoted, setIsVoted] = useState(false);
   const { sign_to_vote, digest, isLoading: load, error } = useVoteMilestone();
+  const currentAccount = useCurrentAccount();
 
   useEffect(() => {
     const fetchCampaign = async () => {
       setIsLoading(true);
       const campaignData = await getCampaignById(id);
+      console.log(campaignData);
       setCampaign(campaignData.data);
 
       const milestonesData = await getMilestonesCampaignById(id);
@@ -48,7 +55,7 @@ const MilestoneVoting = () => {
 
   // Effect to observe the digest value from the hook and update UI accordingly for contribution
   useEffect(() => {
-    if (digest) {
+    if (digest && campaign && currentAccount) {
       toast("Voting is successful", {
         description: `Txn: ${formatDigest(digest)}`,
         action: {
@@ -60,6 +67,16 @@ const MilestoneVoting = () => {
           backgroundColor: "#0986f5",
         },
       });
+
+      const voteResult =
+        campaign.goal > 0
+          ? findAmountByWalletAddress(
+              campaign.contributions,
+              currentAccount.address
+            ) || 0 / campaign.goal
+          : 0;
+      updateVotes(id, milestoneId, { voteResult });
+
       setIsVoted(true);
     }
   }, [digest]);
@@ -77,6 +94,19 @@ const MilestoneVoting = () => {
       });
     }
   }, [error, id, milestoneId, vote]);
+
+  const isContributor = () => {
+    if (!currentAccount?.address) {
+      return false;
+    }
+    if (campaign) {
+      return campaign?.contributions.some(
+        (contributor) => contributor.wallet_address === currentAccount.address
+      );
+    } else {
+      return false;
+    }
+  };
 
   const handleSubmitVote = () => {
     if (!vote) {
@@ -286,10 +316,15 @@ const MilestoneVoting = () => {
 
                       <Button
                         onClick={handleSubmitVote}
-                        disabled={!vote || load}
+                        disabled={!vote || load || !isContributor()}
                         className="w-full"
                       >
-                        {load ? "Submitting..." : "Submit Vote"}
+                        {load && "Submitting..."}
+                        {!isContributor() &&
+                          currentAccount?.address &&
+                          "Only contributors can vote"}
+                        {!currentAccount?.address && "Connect your wallet"}
+                        {!load && isContributor() && "Submit Vote"}
                       </Button>
                     </div>
                   </CardContent>
@@ -350,4 +385,19 @@ export default MilestoneVoting;
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
   return format(date, "MMMM d, yyyy");
+};
+
+const findAmountByWalletAddress = (
+  data: {
+    amount: number;
+    tier_type: string;
+    tx_hash: string;
+    wallet_address: string;
+  }[],
+  targetWalletAddress: string
+): number | undefined => {
+  const foundItem = data.find(
+    (item) => item.wallet_address === targetWalletAddress
+  );
+  return foundItem?.amount;
 };

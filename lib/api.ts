@@ -267,3 +267,33 @@ export const createContribute = async (
     throw error;
   }
 };
+
+export const updateVotes = async (
+  objectId: string,
+  milestoneId: string,
+  values: {
+    voteResult: number;
+  }
+) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/campaigns/${objectId}/milestones/${milestoneId}/vote-result`;
+
+  try {
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(values),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update vote result");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error updating vote result: ", error);
+    throw error;
+  }
+};
