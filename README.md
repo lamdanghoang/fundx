@@ -1,36 +1,21 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FUNDX
 
-## Getting Started
+## Introduction
 
-First, run the development server:
+- FundX is a decentralized crowdfunding platform that empowers innovative creators to raise funds from a global community of backers using secure and transparent blockchain technology.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Built on the Sui blockchain, FundX ensures transparent fund tracking, fraud-proof accountability, and low transaction fees through verifiable smart contract execution. Campaign information such as metadata or descriptions is persistently stored using Walrus, a decentralized storage layer.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- With FundX, users can create fundraising campaigns, contribute to promising projects, and vote on milestones to decide whether funds should be released. This community-driven model revolutionizes trust and efficiency, making crowdfunding safer and more collaborative for both creators and backers.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### FundX makes crowdfunding fair, secure, and truly decentralized.
 
 ## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+To learn more about FundX, take a look at the following information:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- [FundX Website](https://fundx-two.vercel.app)
+- [Our pitchdeck](https://www.canva.com/design/DAGmX6ZUieU/B86yto-04R-ueJN1UXXPxQ/view)
+- [Our video demo](https://youtu.be/GtclJO4N_pk)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+You can check out [our GitHub repository](https://github.com/lamdanghoang/fundx)
