@@ -184,7 +184,7 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                 </>
               )}
 
-              {milestone.status === "completed" && milestone.is_claimed && (
+              {milestone.status === "approved" && milestone.is_claimed && (
                 <div className="flex items-center text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4 mr-1" />
                   <span className="text-sm">Completed and funds released</span>
