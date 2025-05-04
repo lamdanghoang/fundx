@@ -195,7 +195,7 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                 <>
                   <div className="mt-3 mb-1">
                     <div className="flex justify-between text-sm">
-                      <span>Approval Vote</span>
+                      <span>Vote Result</span>
                       <span>{milestone.vote_result}%</span>
                     </div>
                     <Progress value={milestone.vote_result} className="h-2" />
@@ -206,7 +206,7 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                       <Button
                         variant="secondary"
                         size="sm"
-                        disabled={claimLoad}
+                        disabled={claimLoad || claimDigest !== ""}
                         onClick={() => {
                           setMilestoneId(`${milestone.milestone_id}`);
                           sign_to_claim(
@@ -217,7 +217,10 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                         className="flex items-center bg-fund-400 hover:bg-fund-500"
                       >
                         <Vote className="mr-1 h-4 w-4" />
-                        {claimLoad ? "Claiming..." : "Claim Now"}
+                        {!claimDigest && claimLoad
+                          ? "Claiming..."
+                          : "Claim Now"}
+                        {claimDigest && !claimLoad && "Claimed"}
                       </Button>
                     </div>
                   </div>
