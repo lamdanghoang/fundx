@@ -194,6 +194,11 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
               {milestone.status === "approved" && !milestone.is_claimed && (
                 <>
                   <div className="mt-3 mb-1">
+                    <div className="flex justify-between text-sm">
+                      <span>Approval Vote</span>
+                      <span>{milestone.vote_result}%</span>
+                    </div>
+                    <Progress value={milestone.vote_result} className="h-2" />
                     <div className="flex justify-between items-center mt-2">
                       <span className="text-xs text-muted-foreground">
                         Voting ends {formatDate(milestone.voting_end || "")}
