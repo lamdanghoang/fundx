@@ -217,9 +217,8 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                         className="flex items-center bg-fund-400 hover:bg-fund-500"
                       >
                         <Vote className="mr-1 h-4 w-4" />
-                        {!claimDigest && claimLoad
-                          ? "Claiming..."
-                          : "Claim Now"}
+                        {!claimDigest && !claimLoad && "Claim Now"}
+                        {!claimDigest && claimLoad && "Claiming..."}
                         {claimDigest && !claimLoad && "Claimed"}
                       </Button>
                     </div>
