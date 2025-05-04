@@ -97,6 +97,7 @@ interface Image {
 }
 
 export interface Milestone {
+  object_id: string;
   campaign_id: string;
   created_at: string;
   currency: string;

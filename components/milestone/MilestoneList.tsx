@@ -1,3 +1,4 @@
+"use client";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
@@ -5,6 +6,11 @@ import { CheckCircle, Clock, Calendar, Vote } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Milestone } from "@/lib/interface";
+import { useClaimMilestoneFund } from "@/hooks/useFundXContract";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { formatDigest } from "@mysten/sui/utils";
+import { updateClaimed } from "@/lib/api";
 
 interface MilestoneListProps {
   milestones: Milestone[];
@@ -12,6 +18,49 @@ interface MilestoneListProps {
 }
 
 const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
+  const [milestoneId, setMilestoneId] = useState("");
+  const {
+    sign_to_claim,
+    digest: claimDigest,
+    isLoading: claimLoad,
+    error: claimErr,
+  } = useClaimMilestoneFund();
+
+  // Effect to observe the digest value from the hook and update UI accordingly for claiming
+  useEffect(() => {
+    if (claimDigest) {
+      toast("Claiming is successful", {
+        description: `Txn: ${formatDigest(claimDigest)}`,
+        action: {
+          label: "View",
+          onClick: () =>
+            window.open(
+              `https://suiscan.xyz/testnet/tx/${claimDigest}`,
+              "_blank"
+            ),
+        },
+        style: {
+          backgroundColor: "#0986f5",
+        },
+      });
+
+      updateClaimed(campaignId, milestoneId);
+    }
+  }, [claimDigest]);
+
+  // Effect to observe errors from the hook for claiming
+  useEffect(() => {
+    if (claimErr) {
+      toast("Voting Error", {
+        description: `${claimErr}`,
+        action: {
+          label: "Retry",
+          onClick: () => sign_to_claim(campaignId, +milestoneId),
+        },
+      });
+    }
+  }, [claimErr, campaignId, milestoneId]);
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return format(date, "MMM d, yyyy");
@@ -135,11 +184,39 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                 </>
               )}
 
-              {milestone.status === "completed" && (
+              {milestone.status === "completed" && milestone.is_claimed && (
                 <div className="flex items-center text-green-600 mt-3">
                   <CheckCircle className="h-4 w-4 mr-1" />
                   <span className="text-sm">Completed and funds released</span>
                 </div>
+              )}
+
+              {milestone.status === "approved" && !milestone.is_claimed && (
+                <>
+                  <div className="mt-3 mb-1">
+                    <div className="flex justify-between items-center mt-2">
+                      <span className="text-xs text-muted-foreground">
+                        Voting ends {formatDate(milestone.voting_end || "")}
+                      </span>
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        disabled={claimLoad}
+                        onClick={() => {
+                          setMilestoneId(`${milestone.milestone_id}`);
+                          sign_to_claim(
+                            milestone.object_id,
+                            milestone.milestone_id
+                          );
+                        }}
+                        className="flex items-center bg-fund-400 hover:bg-fund-500"
+                      >
+                        <Vote className="mr-1 h-4 w-4" />
+                        {claimLoad ? "Claiming..." : "Claim Now"}
+                      </Button>
+                    </div>
+                  </div>
+                </>
               )}
 
               {milestone.status === "upcoming" && (

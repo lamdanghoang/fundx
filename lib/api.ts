@@ -297,3 +297,26 @@ export const updateVotes = async (
     throw error;
   }
 };
+
+export const updateClaimed = async (objectId: string, milestoneId: string) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/campaigns/${objectId}/milestones/${milestoneId}/claimed`;
+
+  try {
+    const response = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to update is_claimed");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error updating is_claimed: ", error);
+    throw error;
+  }
+};

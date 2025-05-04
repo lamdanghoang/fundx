@@ -53,7 +53,7 @@ const MilestoneVoting = () => {
     fetchCampaign();
   }, [id, milestoneId]);
 
-  // Effect to observe the digest value from the hook and update UI accordingly for contribution
+  // Effect to observe the digest value from the hook and update UI accordingly for voting
   useEffect(() => {
     if (digest && campaign && currentAccount) {
       toast("Voting is successful", {
@@ -84,7 +84,7 @@ const MilestoneVoting = () => {
     }
   }, [digest]);
 
-  // Effect to observe errors from the hook for contribution
+  // Effect to observe errors from the hook for voting
   useEffect(() => {
     if (error) {
       toast("Voting Error", {

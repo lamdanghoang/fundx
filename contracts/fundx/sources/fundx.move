@@ -29,6 +29,7 @@ module fundx::fundx {
     const EInvalidPercentage: u64 = 11;
     const EMilestoneAmountOverflow: u64 = 12;
     const EMilestoneAlreadyReleased: u64 = 13;
+    const EMilestoneAlreadyApproved: u64 = 14;
 
     public struct FundX has key {
         id: UID,
@@ -93,6 +94,18 @@ module fundx::fundx {
     public struct MileStoneApprovedEvent has copy, drop, store {
         campaign_id: ID,
         milestone_id: u64,
+    }
+
+    public struct MileStoneAmountApprovedEvent has copy, drop, store {
+        campaign_id: ID,
+        milestone_id: u64,
+        amount: u64,
+    }
+
+    public struct MilestoneApprovedEvent has copy, drop, store {
+        campaign_id: ID,
+        milestone_id: u64,
+        amount: u64,
     }
 
     public struct MilestoneVotedEvent has copy, drop, store {
@@ -297,6 +310,37 @@ module fundx::fundx {
         event::emit(event);
     }
 
+    public entry fun approve_milestone_amount(_: &Admin, campaign: &mut Campaign, milestone_id: u64, amount: u64) {
+        assert!(!vec_map::contains(&campaign.milestone_amounts, &milestone_id), EMilestoneAlreadyApproved);
+        assert!(amount > 0 && amount <= balance::value(&campaign.balance), EInsufficientBalance);
+
+        vec_map::insert(&mut campaign.milestone_amounts, milestone_id, amount);
+
+        let event = MileStoneAmountApprovedEvent {
+            campaign_id:  object::uid_to_inner(&campaign.id),
+            milestone_id,
+            amount,
+        };
+
+        event::emit(event);
+    }
+
+    public entry fun approve_milestone_id(_: &Admin, campaign: &mut Campaign, milestone_id: u64, amount: u64) {
+        assert!(!vec_map::contains(&campaign.milestone_amounts, &milestone_id), EMilestoneAlreadyApproved);
+        assert!(amount > 0 && amount <= balance::value(&campaign.balance), EInsufficientBalance);
+
+        vec_map::insert(&mut campaign.milestones, milestone_id, true);
+        vec_map::insert(&mut campaign.milestone_amounts, milestone_id, amount);
+
+        let event = MilestoneApprovedEvent {
+            campaign_id:  object::uid_to_inner(&campaign.id),
+            milestone_id,
+            amount,
+        };
+
+        event::emit(event);
+    }
+
     public entry fun vote_milestone(campaign: &mut Campaign, milestone_id: u64, choice: bool, clock: &Clock, ctx: &mut TxContext) {
         assert!(clock::timestamp_ms(clock ) > campaign.deadline, EActiveCampaign);
         assert!(!vec_map::contains(&campaign.released_milestones, &milestone_id), EMilestoneAlreadyReleased);
@@ -412,6 +456,46 @@ module fundx::fundx {
             campaign_id: object::uid_to_inner(&campaign.id),
             platform_address: campaign.admin,
             milestone,
+            amount: fee_amount,
+        };
+
+        event::emit(fund_event);
+        event::emit(fee_event);
+    }
+
+    public entry fun claim_milestone_fund(campaign: &mut Campaign, milestone_id: u64, clock: &Clock, ctx: &mut TxContext) {
+        assert!(campaign.creator == ctx.sender(), ENotContributor);
+        assert!(clock::timestamp_ms(clock) > campaign.deadline, EActiveCampaign);
+        assert!(vec_map::contains(&campaign.milestones, &milestone_id) && *vec_map::get(&campaign.milestones, &milestone_id), EMilestoneInvalid);
+        assert!(!vec_map::contains(&campaign.released_milestones, &milestone_id), EMilestoneAlreadyReleased);
+
+        let amount = *vec_map::get(&campaign.milestone_amounts, &milestone_id);
+        assert!(balance::value(&campaign.balance) >= amount, EInsufficientBalance);
+
+        // Check if vote weight meets quorum
+        let votes_weight = *vec_map::get(&campaign.milestone_vote_weights, &milestone_id);
+        assert!(votes_weight * 100 >= campaign.raised * campaign.quorum_percentage, EMilestoneNotApproved);
+
+        let fee_amount = amount * 5 / 100;
+        let mut total_coin = coin::take<SUI>(&mut campaign.balance, amount, ctx);
+        let fee_coin = coin::split<SUI>(&mut total_coin, fee_amount, ctx);
+
+        transfer::public_transfer(total_coin, campaign.creator);
+        transfer::public_transfer(fee_coin, campaign.admin);
+
+        vec_map::insert(&mut campaign.released_milestones, milestone_id, true);
+
+        let fund_event = FundReleaseEvent {
+            campaign_id: object::uid_to_inner(&campaign.id),
+            recipient: campaign.creator,
+            milestone: milestone_id,
+            amount,
+        };
+
+        let fee_event = FeeCollectedEvent {
+            campaign_id: object::uid_to_inner(&campaign.id),
+            platform_address: campaign.admin,
+            milestone: milestone_id,
             amount: fee_amount,
         };
 
