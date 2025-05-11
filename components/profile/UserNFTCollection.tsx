@@ -5,6 +5,7 @@ import Link from "next/link";
 import { NftFieldProps } from "@/hooks/useFundXContract";
 import Image from "next/image";
 import { Tag } from "lucide-react";
+import { formatAddress } from "@mysten/sui/utils";
 
 // interface NFT {
 //   id: string;
@@ -123,7 +124,7 @@ const UserNFTCollection = ({ nfts }: UserNFTCollectionProps) => {
                 href={`/campaign/${nft.campaign_id}`}
                 className="text-sm text-muted-foreground hover:underline"
               >
-                From: {nft.name}
+                From: Campaign {formatAddress(nft.campaign_id)}
               </Link>
 
               {/* <div className="mt-2 text-sm">

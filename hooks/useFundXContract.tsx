@@ -213,7 +213,7 @@ export const useCreateContribution = () => {
         process.env.CONTRIBUTION_STORE_ID ||
         "0x5d2e795b589f7307a548199ccc14c54107a0174984c200364a15396ff94e56f2";
 
-      const name = `[BACKER] - ${title}`;
+      const name = `${title} Contributor`;
       const image_url = `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${image}`;
       const metadata_url = `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${metadata}`;
 
