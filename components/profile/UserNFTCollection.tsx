@@ -1,9 +1,10 @@
 "use client";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import Link from "next/link";
 import { NftFieldProps } from "@/hooks/useFundXContract";
 import Image from "next/image";
+import { Tag } from "lucide-react";
 
 // interface NFT {
 //   id: string;
@@ -124,14 +125,6 @@ const UserNFTCollection = ({ nfts }: UserNFTCollectionProps) => {
               >
                 From: {nft.name}
               </Link>
-              <div className="mt-2 w-fit p-2 border rounded-xl md:ml-auto">
-                <Link
-                  href={`https://suiscan.xyz/testnet/object/${nft.id}`}
-                  target="_blank"
-                >
-                  View
-                </Link>
-              </div>
 
               {/* <div className="mt-2 text-sm">
                 <p className="text-muted-foreground">
@@ -148,6 +141,16 @@ const UserNFTCollection = ({ nfts }: UserNFTCollectionProps) => {
                 )}
               </div> */}
             </CardContent>
+            <CardFooter className="flex flex-wrap gap-2">
+              <Button size="sm" variant="outline" className="flex-1" disabled>
+                <Tag className="mr-1 h-4 w-4" />
+                Sell
+              </Button>
+              <Button size="sm" variant="outline" className="flex-1" disabled>
+                <Tag className="mr-1 h-4 w-4" />
+                Transfer
+              </Button>
+            </CardFooter>
 
             {/* <CardFooter className="p-4 pt-0 flex flex-wrap gap-2">
               {!nft.currentPrice ? (
