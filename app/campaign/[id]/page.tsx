@@ -141,12 +141,19 @@ const CampaignDetail = () => {
 
   // Effect to observe errors from the hook for contribution
   useEffect(() => {
-    if (error) {
+    if (error && campaign && objectFields) {
       toast("Transaction Error", {
         description: `${error}`,
         action: {
           label: "Retry",
-          onClick: () => sign_to_contribute(id, selectedTier.amount),
+          onClick: () =>
+            sign_to_contribute(
+              id,
+              campaign.title,
+              campaign.galleryImages[0],
+              objectFields.blob_id,
+              selectedTier.amount
+            ),
         },
       });
     }
@@ -539,7 +546,13 @@ const CampaignDetail = () => {
                   {currentAccount ? (
                     <Button
                       onClick={() =>
-                        sign_to_contribute(id, selectedTier.amount)
+                        sign_to_contribute(
+                          id,
+                          campaign.title,
+                          campaign.galleryImages[0],
+                          objectFields.blob_id,
+                          selectedTier.amount
+                        )
                       }
                       className="w-full gradient-bg cursor-pointer select-none"
                       disabled={
@@ -663,7 +676,7 @@ const CampaignDetail = () => {
                     <span className="text-muted-foreground">Blob ID</span>
                     <div className="flex items-center">
                       <span className="font-medium truncate max-w-[120px]">
-                        {formatAddress(objectFields.blob_id)}
+                        {formatDigest(objectFields.blob_id)}
                       </span>
                       <Button
                         variant="ghost"

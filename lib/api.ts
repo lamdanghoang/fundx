@@ -218,6 +218,23 @@ export const getCampaignById = async (id: string) => {
   }
 };
 
+export const getContributionByAddress = async (address: string) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/contributions?address=${address}`;
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch contribution with address");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error fetching contribution with address: ", error);
+    throw error;
+  }
+};
+
 export const getMilestonesCampaignById = async (id: string) => {
   const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/milestones?id=${id}`;
   try {

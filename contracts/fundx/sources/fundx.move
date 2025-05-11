@@ -8,6 +8,8 @@ module fundx::fundx;
 
 module fundx::fundx {
 
+    use fundx::fundx_nft;
+
     use std::string::{String, Self};
     use sui::balance;
     use sui::sui::SUI;
@@ -15,6 +17,7 @@ module fundx::fundx {
     use sui::vec_map;
     use sui::clock::{Clock, Self};
     use sui::event;
+    use fundx::fundx_nft::FundXContributionNFT;
 
     const EInsufficientBalance: u64 = 1;
     const EActiveCampaign: u64 = 2;
@@ -30,6 +33,7 @@ module fundx::fundx {
     const EMilestoneAmountOverflow: u64 = 12;
     const EMilestoneAlreadyReleased: u64 = 13;
     const EMilestoneAlreadyApproved: u64 = 14;
+    const ENotOwnerNftForVote: u64 = 15;
 
     public struct FundX has key {
         id: UID,
@@ -212,7 +216,7 @@ module fundx::fundx {
         campaign.status = 0;
     }
 
-    public entry fun contribute(campaign: &mut Campaign, coin: Coin<SUI>, amount: u64, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun contribute(campaign: &mut Campaign, name: String, image_url: String, metadata_url: String, coin: Coin<SUI>, amount: u64, clock: &Clock, store: &mut fundx_nft::ContributionStore, ctx: &mut TxContext) {
         assert!(clock::timestamp_ms(clock) < campaign.deadline, EExpiredCampaign);
         assert!(campaign.status == 0, EPausedCampaign);
                 
@@ -248,6 +252,18 @@ module fundx::fundx {
         };
 
         event::emit<ContributionEvent>(event);
+
+        // NFT Mint or Update
+        fundx_nft::mint_nft_or_update_store(
+            &campaign.id,
+            amount,
+            name,
+            image_url, // placeholder image
+            metadata_url,
+            ctx.sender(),
+            store,
+            ctx
+        );
     }
 
     public entry fun refund(campaign: &mut Campaign, clock: &Clock, ctx: &mut TxContext) {
@@ -341,11 +357,12 @@ module fundx::fundx {
         event::emit(event);
     }
 
-    public entry fun vote_milestone(campaign: &mut Campaign, milestone_id: u64, choice: bool, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun vote_milestone(nft: &FundXContributionNFT, campaign: &mut Campaign, milestone_id: u64, choice: bool, clock: &Clock, ctx: &mut TxContext) {
         assert!(clock::timestamp_ms(clock ) > campaign.deadline, EActiveCampaign);
         assert!(!vec_map::contains(&campaign.released_milestones, &milestone_id), EMilestoneAlreadyReleased);
         let is_contributor = vec_map::contains(&campaign.contributors, &ctx.sender());
         assert!(is_contributor, ENotContributor);
+        assert!(nft.contributor() == ctx.sender(), ENotOwnerNftForVote);
 
         // Check voted or not
         let votes = if (vec_map::contains(&campaign.milestone_votes, &milestone_id)) {

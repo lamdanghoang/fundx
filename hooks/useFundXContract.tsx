@@ -9,7 +9,7 @@ import { Transaction } from "@mysten/sui/transactions";
 import { useState } from "react";
 
 const MODULE_ADDRESS =
-  "0xbc42b72214e659bca0815f6c087f5db35d9a9ed6581af26c9f9047caeb7b4b70";
+  "0xbbfac22b0569bf81ba7280954092a04dce282e96cc9bc6f285f168514c49a902";
 const MODULE_NAME = "fundx";
 
 // Helper function to get the full module ID
@@ -189,7 +189,13 @@ export const useCreateContribution = () => {
   const suiClient = useSuiClient();
 
   // Function with extensive debugging added
-  const sign_to_contribute = async (objectId: string, amount: number) => {
+  const sign_to_contribute = async (
+    campaignId: string,
+    title: string,
+    image: string,
+    metadata: string,
+    amount: number
+  ) => {
     // Reset states
     setError(null);
     setIsLoading(true);
@@ -197,16 +203,27 @@ export const useCreateContribution = () => {
     setDigest("");
 
     console.log("=== Contribution Transaction Started ===");
-    console.log("Parameters:", { objectId, amount });
+    console.log("Parameters:", { campaignId, amount });
     console.log("Current account:", account?.address);
 
     try {
       // Format values
       const amountFormatted = toSuiU64(amount);
+      const storeId =
+        process.env.CONTRIBUTION_STORE_ID ||
+        "0x5d2e795b589f7307a548199ccc14c54107a0174984c200364a15396ff94e56f2";
+
+      const name = `[BACKER] - ${title}`;
+      const image_url = `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${image}`;
+      const metadata_url = `${process.env.NEXT_PUBLIC_AGGREGATOR}/v1/blobs/${metadata}`;
 
       console.log("Formatted values:", {
-        objectId,
+        campaignId,
+        name,
+        image_url,
+        metadata_url,
         amountFormatted,
+        storeId,
         moduleId: getModuleId(),
       });
 
@@ -220,10 +237,14 @@ export const useCreateContribution = () => {
       txb.moveCall({
         target: `${getModuleId()}::contribute`,
         arguments: [
-          txb.object(objectId),
+          txb.object(campaignId),
+          txb.pure.string(name),
+          txb.pure.string(image_url),
+          txb.pure.string(metadata_url),
           coin,
           txb.pure.u64(amountFormatted),
           txb.object.clock(),
+          txb.object(storeId),
         ],
       });
 
@@ -634,6 +655,91 @@ export const useGetObject = () => {
 
   return {
     get_object_fields,
+  };
+};
+
+export interface NftFieldProps {
+  id: string;
+  campaign_id: string;
+  contributor: string;
+  image_url: string;
+  metadata_url: string;
+  name: string;
+}
+
+export const useGetNft = () => {
+  const suiClient = useSuiClient();
+
+  // Function with extensive debugging added
+  const get_nft_fields = async (objectId: string) => {
+    try {
+      const object = await suiClient.getObject({
+        id: objectId,
+        options: {
+          showContent: true,
+        },
+      });
+      const content = object.data?.content;
+
+      if (content && content.dataType === "moveObject") {
+        const fields = content.fields as Record<string, any>;
+
+        const parsed: NftFieldProps = {
+          id: fields.id.id as string,
+          campaign_id: fields.campaign_id as string,
+          contributor: fields.contributor as string,
+          image_url: fields.image_url as string,
+          metadata_url: fields.metadata_url as string,
+          name: fields.name as string,
+        };
+
+        console.log("Parsed Fields:", parsed);
+        return parsed;
+      } else {
+        console.error("Not moveObject or Object has no content.");
+        return null;
+      }
+    } catch (setupError) {
+      console.error("Error getting fields:", setupError);
+    }
+  };
+
+  const get_all_nfts = async (address: string): Promise<NftFieldProps[]> => {
+    try {
+      const resp = await suiClient.getOwnedObjects({
+        owner: address,
+        filter: {
+          StructType:
+            "0xbbfac22b0569bf81ba7280954092a04dce282e96cc9bc6f285f168514c49a902::fundx_nft::FundXContributionNFT",
+        },
+        options: {
+          showType: true,
+          showContent: true,
+        },
+      });
+
+      const nftObjects = resp.data ?? [];
+
+      const allNfts = await Promise.all(
+        nftObjects.map(async (obj) => {
+          const id = obj.data?.objectId;
+          if (id) {
+            return await get_nft_fields(id);
+          }
+          return null;
+        })
+      );
+
+      return allNfts.filter((nft): nft is NftFieldProps => nft !== null);
+    } catch (error) {
+      console.error("Error fetching user FundX NFTs:", error);
+      return [];
+    }
+  };
+
+  return {
+    get_nft_fields,
+    get_all_nfts,
   };
 };
 
