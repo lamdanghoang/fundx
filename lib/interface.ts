@@ -60,6 +60,9 @@ export interface Campaign {
   reward_type: RewardType;
   start_at: string;
   tx_hash: string;
+  milestones?: {
+    milestone_id: number;
+  }[];
 }
 
 export interface VotingCampaign {

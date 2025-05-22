@@ -519,4 +519,44 @@ module fundx::fundx {
         event::emit(fund_event);
         event::emit(fee_event);
     }
+
+    public fun get_deadline(campaign: &Campaign): u64 {
+        campaign.deadline
+    }
+
+    public fun is_milestone_voted(campaign: &Campaign, milestone_id: u64): bool {
+        vec_map::contains(&campaign.milestones, &milestone_id)
+    }
+
+    public fun is_milestone_released(campaign: &Campaign, milestone_id: u64): bool {
+        vec_map::contains(&campaign.released_milestones, &milestone_id)
+    }
+
+    public fun has_milestone_votes(campaign: &Campaign, milestone_id: u64): bool {
+        vec_map::contains(&campaign.milestone_votes, &milestone_id)
+    }
+
+    public fun get_milestone_votes_mut(campaign: &mut Campaign, milestone_id: u64): &mut vec_map::VecMap<address, bool> {
+        vec_map::get_mut(&mut campaign.milestone_votes, &milestone_id)
+    }
+
+    public fun insert_milestone_votes(campaign: &mut Campaign, milestone_id: u64, votes: vec_map::VecMap<address, bool>) {
+        vec_map::insert(&mut campaign.milestone_votes, milestone_id, votes)
+    }
+
+    public fun has_milestone_vote_weights(campaign: &Campaign, milestone_id: u64): bool {
+        vec_map::contains(&campaign.milestone_vote_weights, &milestone_id)
+    }
+
+    public fun get_milestone_vote_weights_mut(campaign: &mut Campaign, milestone_id: u64): &mut u64 {
+        vec_map::get_mut(&mut campaign.milestone_vote_weights, &milestone_id)
+    }
+
+    public fun insert_milestone_vote_weights(campaign: &mut Campaign, milestone_id: u64, weight: u64) {
+        vec_map::insert(&mut campaign.milestone_vote_weights, milestone_id, weight)
+    }
+
+    public fun get_campaign_id(campaign: &Campaign): &UID {
+        &campaign.id
+    }
 }

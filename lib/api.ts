@@ -26,6 +26,22 @@ interface CampaignFormData {
   rewardType: "none" | "token" | "nft";
 }
 
+interface ProposalData {
+  objectId: string;
+  campaignId: string;
+  milestoneId: string;
+  title: string;
+  description: string;
+  requestedAmount: number;
+  details: {
+    title: string;
+    content: string;
+  }[];
+
+  deliverables: string;
+  votingDurationDays: number;
+}
+
 interface Campaign extends CampaignFormData {
   blobId: string;
   createdAt: string;
@@ -98,6 +114,36 @@ export const storeFormData = async (
   throw new Error(result.error.error_msg);
 };
 
+export const storeProposalData = async (
+  values: ProposalData
+): Promise<string> => {
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_PUBLISHER}/v1/blobs?epochs=15`,
+    {
+      method: "PUT",
+      body: JSON.stringify(values),
+      headers: {
+        "Content-Type": "application/octet-stream",
+      },
+      mode: "cors",
+    }
+  );
+
+  const result = await response.json();
+
+  // Handle different result variants
+  if (result.newlyCreated) {
+    // If the blob was just created
+    return result.newlyCreated.blobObject.blobId;
+  } else if (result.alreadyCertified) {
+    // If the blob already exists and is certified
+    return result.alreadyCertified.blobId;
+  } else if (result.markedInvalid) {
+    throw new Error("Blob was marked invalid");
+  }
+  throw new Error(result.error.error_msg);
+};
+
 export const readBlob = async (blobId: string) => {
   try {
     const response = await fetch(
@@ -140,6 +186,45 @@ export const uploadImage = async (values: {
   }
 };
 
+export const uploadMilestone = async (values: {
+  objectId: string;
+  campaignId: string;
+  milestoneId: string;
+  title: string;
+  description: string;
+  deliverables: string;
+  status: string;
+  amount: number;
+  currency: string;
+  votingDurationDays: number;
+  informationId: string;
+}) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/upload-milestone`;
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        ...values,
+        deliverables: stringToArrayByNewline(values.deliverables),
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to upload milestone");
+    }
+
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error uploading milestone:", error);
+    throw error;
+  }
+};
+
 export const createCampaign = async (
   values: CampaignFormData & { blobId: string } & { objectId?: string } & {
     txHash: string;
@@ -178,6 +263,23 @@ export const getCampaigns = async (limit: number, offset: number) => {
 
     const data = await response.json();
     return data;
+  } catch (error) {
+    console.error("Error fetching campaigns:", error);
+    throw error;
+  }
+};
+
+export const getUserCampaigns = async (address: string) => {
+  const url = `${process.env.NEXT_PUBLIC_FUNDX_API}/campaigns/creator?creator=${address}`;
+  try {
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch campaigns");
+    }
+
+    const data = await response.json();
+    return data.data;
   } catch (error) {
     console.error("Error fetching campaigns:", error);
     throw error;
@@ -337,3 +439,7 @@ export const updateClaimed = async (objectId: string, milestoneId: string) => {
     throw error;
   }
 };
+
+function stringToArrayByNewline(inputString: string): string[] {
+  return inputString.split("\n");
+}

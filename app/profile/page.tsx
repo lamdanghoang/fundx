@@ -6,13 +6,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import UserBackedCampaigns from "@/components/profile/UserBackedCampaigns";
 import UserNFTCollection from "@/components/profile/UserNFTCollection";
 import { useCurrentAccount } from "@mysten/dapp-kit";
-import { getContributionByAddress } from "@/lib/api";
+import { getContributionByAddress, getUserCampaigns } from "@/lib/api";
 import { formatAddress } from "@mysten/sui/utils";
 import { Loader2, Wallet } from "lucide-react";
 import { CustomBtn } from "@/components/wallet/ConnectButton";
 import { NftFieldProps, useGetNft } from "@/hooks/useFundXContract";
+import UserCampaigns from "@/components/profile/UserCampaigns";
+import { Campaign } from "@/lib/interface";
 
-interface CampaignDetails {
+export interface CampaignDetails {
   blob_id: string;
   campaign_name: string;
   category: string;
@@ -107,6 +109,7 @@ export interface Contribution {
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("backed");
   const [contributions, setContributions] = useState<Contribution[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [nfts, setNfts] = useState<NftFieldProps[]>([]);
   const [totalContributed, setTotalContributed] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
@@ -127,6 +130,9 @@ const Profile = () => {
 
       const userNfts = await get_all_nfts(currentAccount.address);
       setNfts(userNfts);
+
+      const userCampaigns = await getUserCampaigns(currentAccount.address);
+      setCampaigns(userCampaigns);
 
       setIsLoading(false);
     };
@@ -225,9 +231,10 @@ const Profile = () => {
             onValueChange={setActiveTab}
             className="space-y-4"
           >
-            <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsList className="grid w-full max-w-md grid-cols-3">
               <TabsTrigger value="backed">Backed Campaigns</TabsTrigger>
               <TabsTrigger value="nfts">NFT Collection</TabsTrigger>
+              <TabsTrigger value="campaigns">Your Campaigns</TabsTrigger>
             </TabsList>
 
             <TabsContent value="backed" className="space-y-4">
@@ -238,6 +245,11 @@ const Profile = () => {
             <TabsContent value="nfts" className="space-y-4">
               <h2 className="text-2xl font-bold">Your NFT Collection</h2>
               <UserNFTCollection nfts={nfts} />
+            </TabsContent>
+
+            <TabsContent value="campaigns" className="space-y-4">
+              <h2 className="text-2xl font-bold">Your Campaigns</h2>
+              <UserCampaigns campaigns={campaigns} />
             </TabsContent>
           </Tabs>
         </div>

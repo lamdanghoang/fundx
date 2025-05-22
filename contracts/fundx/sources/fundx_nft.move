@@ -98,6 +98,15 @@ module fundx::fundx_nft {
         nft.contributor
     }
 
+    public fun contains_key(
+        store: &ContributionStore,
+        campaign_id: &UID,
+        contributor: address
+    ): bool {
+        let key = make_key(campaign_id, contributor);
+        table::contains(&store.table, key)
+    }
+
     public fun transfer_nft(campaign_id: &UID, nft: FundXContributionNFT, recipient: address, store: &mut ContributionStore, ctx: &mut TxContext) {
         let old_key = make_key(campaign_id, ctx.sender());
         let current_amount = table::remove(&mut store.table, old_key);

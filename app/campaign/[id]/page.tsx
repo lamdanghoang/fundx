@@ -617,14 +617,14 @@ const CampaignDetail = () => {
                           <p className="text-sm text-muted-foreground mb-2">
                             {tier.description}
                           </p>
-                          <div className="text-xs text-muted-foreground">
+                          {/* <div className="text-xs text-muted-foreground">
                             {tier.current} backers
                             {tier.limit ? (
                               <>. Limited ({tier.limit - tier.current} left)</>
                             ) : (
                               ""
                             )}
-                          </div>
+                          </div> */}
                         </div>
                       ))}
                     </div>
