@@ -16,6 +16,6 @@ To learn more about FundX, take a look at the following information:
 
 - [FundX Website](https://fundx-two.vercel.app)
 - [Our pitchdeck](https://www.canva.com/design/DAGlzn0jyEg/CTPZYxmVd0efXBwMlTdGUA/edit)
-- [Our video demo](https://youtu.be/pLstCWjpvAQ)
+- [Our video demo](https://youtu.be/EzdfX6m37nA)
 
 You can check out [our GitHub repository](https://github.com/lamdanghoang/fundx)
