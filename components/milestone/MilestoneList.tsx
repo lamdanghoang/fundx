@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Clock, Calendar, Vote } from "lucide-react";
+import { CheckCircle, Clock, Vote } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
 import { Milestone } from "@/lib/interface";
@@ -133,12 +133,13 @@ const MilestoneList = ({ milestones, campaignId }: MilestoneListProps) => {
                 {milestone.description}
               </p>
 
-              <div className="flex flex-wrap gap-3 mb-3">
-                <div className="bg-muted px-3 py-1 rounded-full text-xs flex items-center">
+              <div className="flex flex-wrap gap-3 mb-3 items-center">
+                {/* <div className="bg-muted px-3 py-1 rounded-full text-xs flex items-center">
                   <Calendar className="h-3 w-3 mr-1" />
                   {formatDate(milestone.timeline_start)} -{" "}
                   {formatDate(milestone.timeline_end)}
-                </div>
+                </div> */}
+                <p className="text-muted-foreground text-xs">Amount:</p>
                 <div className="bg-muted px-3 py-1 rounded-full text-xs">
                   {milestone.goal_milestone.toLocaleString()} SUI
                 </div>

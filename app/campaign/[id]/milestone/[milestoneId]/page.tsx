@@ -189,13 +189,13 @@ const MilestoneVoting = () => {
                         {milestone.goal_milestone.toLocaleString()} SUI
                       </span>
                     </div>
-                    <div className="flex justify-between">
+                    {/* <div className="flex justify-between">
                       <span className="text-muted-foreground">Timeline:</span>
                       <span className="font-medium">
                         {formatDate(milestone.timeline_start)} -{" "}
                         {formatDate(milestone.timeline_end)}
                       </span>
-                    </div>
+                    </div> */}
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">
                         Voting Deadline:
